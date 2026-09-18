@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1200" viewBox="0 0 1000 1200">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFEEE9"/>
+      <stop offset="1" stop-color="#E3E0D8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="1200" fill="url(#g1)"/>
+  <rect x="0.5" y="0.5" width="999" height="1199" fill="none" stroke="#DDDAD3" stroke-width="1"/>
+  <!-- abstract layered fashion silhouette, editorial style -->
+  <g opacity="0.9">
+    <rect x="580" y="144" width="280" height="912" fill="#DDDAD3" opacity="0.55" />
+    <rect x="140" y="264" width="320" height="672.0000000000001" fill="#FFFFFF" stroke="#DDDAD3" />
+    <g transform="translate(300, 600) scale(2.6)">
+      
+    <path d="M -30 -95 L -12 -85 L 12 -85 L 30 -95 L 42 -60 L 25 -50 L 55 90 L -55 90 L -25 -50 L -42 -60 Z"
+      fill="none" stroke="#292826" stroke-width="4" stroke-linejoin="round" />
+  
+    </g>
+  </g>
+  <text x="80" y="1152" font-family="Georgia, 'Times New Roman', serif" font-size="66" fill="#242424">Fitted</text>
+  <text x="80" y="1182" font-family="Arial, sans-serif" font-size="36" fill="#74716B">Fashion should feel personal.</text>
+</svg>

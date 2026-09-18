@@ -1,0 +1,68 @@
+/* =========================================================================
+   Login page styles. Builds on the shared CSS custom properties from
+   /css/shared.css (colors, fonts, spacing, .fitted-input, .btn-fitted).
+   ========================================================================= */
+
+.auth-shell {
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ---- Layout: side-by-side on desktop, stacked on mobile ----
+   `.auth-layout` is a flexbox row. With only the login card present it
+   naturally centers itself (justify-content: center); once the register
+   card mounts next to it, the row simply has two children instead of one. */
+.auth-layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  justify-content: center;
+  width: 100%;
+  max-width: 920px;
+}
+
+.auth-card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  width: 100%;
+  max-width: 400px;
+  animation: fade-in-up 320ms ease;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-subtext {
+  color: var(--color-text-secondary);
+  font-size: 0.88rem;
+  margin-bottom: var(--space-md);
+}
+
+.auth-status-message {
+  margin-top: var(--space-md);
+  max-width: 400px;
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* On tablets/desktops with room for two 400px cards + gap, .auth-layout's
+   flex-wrap already places them side by side. Below that width they wrap
+   onto their own lines automatically — no extra media query needed. */

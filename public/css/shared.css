@@ -1,0 +1,278 @@
+/* =========================================================================
+   FITTED — SHARED DESIGN SYSTEM
+   Loaded on every traditional HTML page (Home, About, Contact). The React
+   pages (App, Login) import their own stylesheet but re-use these same
+   CSS custom properties so the whole site feels like one product.
+   ========================================================================= */
+
+:root {
+  /* ---- palette (premium, neutral, editorial) ---- */
+  --color-bg: #f8f7f4;
+  --color-bg-secondary: #efeee9;
+  --color-card: #ffffff;
+  --color-border: #dddad3;
+  --color-text: #242424;
+  --color-text-secondary: #74716b;
+  --color-accent: #a8957d;
+  --color-dark: #292826;
+
+  /* ---- typography ---- */
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+
+  /* ---- spacing scale (used for the box-model requirement) ---- */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.75rem;
+  --space-lg: 3rem;
+  --space-xl: 6rem;
+
+  /* ---- misc ---- */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --transition-fast: 180ms ease;
+  --transition-medium: 320ms ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  /* Prevents the horizontal-scroll issue the spec calls out explicitly. */
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.15;
+  margin: 0 0 var(--space-sm) 0;
+}
+
+p {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container-fitted {
+  width: 100%;
+  max-width: 1220px;
+  margin: 0 auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+section {
+  padding: var(--space-xl) 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: var(--space-sm);
+}
+
+/* =========================================================================
+   BUTTONS — sophisticated hover states, no bright colors / gradients
+   ========================================================================= */
+.btn-fitted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  padding: 0.9rem 1.9rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast),
+    border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.btn-fitted:active {
+  transform: translateY(1px);
+}
+
+.btn-dark {
+  background-color: var(--color-dark);
+  color: #ffffff;
+}
+
+.btn-dark:hover {
+  background-color: #050505;
+  color: #ffffff;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.btn-outline:hover {
+  background-color: var(--color-dark);
+  color: #ffffff;
+}
+
+/* =========================================================================
+   NAVBAR
+   ========================================================================= */
+.fitted-navbar {
+  background-color: var(--color-bg) !important;
+  border-bottom: 1px solid var(--color-border);
+  padding-top: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.fitted-navbar .navbar-brand {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  color: var(--color-dark);
+  letter-spacing: 0.02em;
+}
+
+.fitted-navbar .nav-link {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  color: var(--color-text);
+  margin-left: var(--space-md);
+  padding-bottom: 4px;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.fitted-navbar .nav-link:hover,
+.fitted-navbar .nav-link.active {
+  color: var(--color-dark);
+  border-bottom-color: var(--color-accent);
+}
+
+.fitted-navbar .navbar-toggler {
+  border-color: var(--color-border);
+}
+
+/* =========================================================================
+   FOOTER
+   ========================================================================= */
+.fitted-footer {
+  background-color: var(--color-dark);
+  color: #e9e6de;
+  padding: var(--space-lg) 0 var(--space-md) 0;
+}
+
+.fitted-footer h5 {
+  color: #ffffff;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+}
+
+.fitted-footer a {
+  color: #c7c3ba;
+  transition: color var(--transition-fast);
+}
+
+.fitted-footer a:hover {
+  color: #ffffff;
+}
+
+.fitted-footer .footer-meta {
+  border-top: 1px solid #45433f;
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  font-size: 0.8rem;
+  color: #9a978f;
+}
+
+/* =========================================================================
+   REUSABLE CARD / SECTION UTILITIES (demonstrates box model)
+   ========================================================================= */
+.card-fitted {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: box-shadow var(--transition-medium), border-color var(--transition-medium);
+}
+
+.card-fitted:hover {
+  border-color: var(--color-accent);
+}
+
+.section-alt {
+  background-color: var(--color-bg-secondary);
+}
+
+.divider {
+  width: 60px;
+  height: 2px;
+  background-color: var(--color-accent);
+  border: none;
+  margin: var(--space-sm) 0 var(--space-md) 0;
+}
+
+/* image zoom-on-hover utility used on hero / gallery imagery */
+.img-zoom {
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--color-border);
+}
+
+.img-zoom img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-medium);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.045);
+}
+
+/* Fade-in-on-scroll utility toggled by js/main.js via IntersectionObserver */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 767px) {
+  section {
+    padding: var(--space-lg) 0;
+  }
+}

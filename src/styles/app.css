@@ -1,0 +1,354 @@
+/* =========================================================================
+   Virtual Fitting Room — React app styles.
+   Builds on the CSS custom properties defined in /css/shared.css (loaded
+   globally via a <link> tag in app.html), so colors/fonts/spacing stay
+   consistent with the rest of the site.
+   ========================================================================= */
+
+.spa-shell {
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-xl);
+}
+
+.fitting-room-heading {
+  margin-bottom: var(--space-md);
+}
+
+.fitting-room-heading p {
+  margin-bottom: 0;
+}
+
+/* ---- SPA sub-navigation (Shop / Fitting Room / My Looks) ---- */
+.spa-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-lg);
+  padding-bottom: 0;
+}
+
+.spa-tab {
+  font-size: 0.88rem;
+  padding: 0.6rem 0.25rem;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.spa-tab:hover {
+  color: var(--color-text);
+}
+
+.spa-tab.is-active {
+  color: var(--color-dark);
+  border-bottom-color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ---- Fitting Room two-column layout ----
+   A CSS Grid with two columns on desktop that collapses to a single
+   column on small screens — the responsive behavior the spec asks for,
+   done with plain CSS instead of extra Bootstrap columns since this is
+   the React page. */
+.fitting-room-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (max-width: 991px) {
+  .fitting-room-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fitting-room-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  position: sticky;
+  top: 90px;
+}
+
+@media (max-width: 991px) {
+  .fitting-room-left {
+    position: static;
+  }
+}
+
+/* ---- Photo uploader ---- */
+.photo-uploader-preview {
+  aspect-ratio: 3 / 4;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+
+.photo-uploader-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-uploader-placeholder {
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.photo-uploader-placeholder p {
+  margin: var(--space-xs) 0 0 0;
+  font-size: 0.9rem;
+}
+
+/* ---- Selected product summary ---- */
+.selected-product {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-card);
+}
+
+.selected-product-empty {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  padding: var(--space-md);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.selected-product-media {
+  width: 84px;
+  height: 104px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.selected-product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.selected-product-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.selected-product-price {
+  color: var(--color-text);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.selected-product-hint {
+  font-size: 0.78rem;
+  margin: var(--space-xs) 0 0 0;
+}
+
+/* ---- Try-on panel ---- */
+.try-on-panel {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+}
+
+.try-on-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-text-secondary);
+}
+
+.try-on-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.try-on-result-product {
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.try-on-result-message {
+  font-size: 0.85rem;
+  margin-bottom: 0;
+  font-style: italic;
+}
+
+/* ---- Category filter pills ---- */
+.category-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: var(--space-md);
+}
+
+.category-pill {
+  font-size: 0.82rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-card);
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.category-pill:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.category-pill.is-active {
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
+  color: #ffffff;
+}
+
+/* ---- Product card ---- */
+.product-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-card);
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--transition-fast);
+}
+
+.product-card.is-selected {
+  border-color: var(--color-dark);
+}
+
+.product-card-image {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.product-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-medium);
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.04);
+}
+
+.product-card-favorite {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+}
+
+.product-card-badge {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 0.6rem;
+  background-color: var(--color-dark);
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+}
+
+.favorites-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.favorites-btn.is-favorite {
+  color: #b0523f;
+  border-color: #b0523f;
+}
+
+.product-card-body {
+  padding: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.product-card-category {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 0.2rem;
+}
+
+.product-card-name {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.product-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.product-card-price {
+  font-weight: 600;
+}
+
+.btn-sm.btn-fitted {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+}
+
+.product-grid-empty,
+.my-looks-empty {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.shop-selection-note {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  background-color: var(--color-bg-secondary);
+  margin-bottom: var(--space-md);
+  font-size: 0.9rem;
+}

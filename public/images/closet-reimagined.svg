@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFEEE9"/>
+      <stop offset="1" stop-color="#E3E0D8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#g1)"/>
+  <rect x="0.5" y="0.5" width="1199" height="899" fill="none" stroke="#DDDAD3" stroke-width="1"/>
+  <!-- abstract layered fashion silhouette, editorial style -->
+  <g opacity="0.9">
+    <rect x="696" y="108" width="336.00000000000006" height="684" fill="#DDDAD3" opacity="0.55" />
+    <rect x="168.00000000000003" y="198" width="384" height="504.00000000000006" fill="#FFFFFF" stroke="#DDDAD3" />
+    <g transform="translate(360, 450) scale(2.6)">
+      
+    <path d="M -30 -95 L -12 -85 L 12 -85 L 30 -95 L 42 -60 L 25 -50 L 55 90 L -55 90 L -25 -50 L -42 -60 Z"
+      fill="none" stroke="#292826" stroke-width="4" stroke-linejoin="round" />
+  
+    </g>
+  </g>
+  <text x="96" y="852" font-family="Georgia, 'Times New Roman', serif" font-size="50" fill="#242424">Your closet</text>
+  <text x="96" y="882" font-family="Arial, sans-serif" font-size="27" fill="#74716B">reimagined.</text>
+</svg>
