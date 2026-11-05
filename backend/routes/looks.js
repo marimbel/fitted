@@ -2,37 +2,68 @@
  * routes/looks.js
  *
  * POST /api/looks/generate
- *   Runs the full ADK agent pipeline (agents/stylistPipeline.js) against
- *   the user's latest photoAnalyses + styleRequests, and returns the
- *   generated looks plus the critique trace (how many loop iterations,
- *   what LookCritic flagged each round).
+ *   Body: { photoAnalyses, styleRequest } — runs the full agent
+ *   pipeline (agents/stylistPipeline.js) and returns the generated
+ *   looks plus the critique trace (how many loop iterations, what
+ *   LookCritic flagged each round).
  *
- * GET /api/looks/saved
- *   Reads users/{uid}/savedLooks from Firestore for the My Looks page.
- *
- * POST /api/looks/save
- *   Body: { look } — writes one look into users/{uid}/savedLooks.
- *   This is the Project 2 replacement for Project 1's client-only
- *   FavoritesButton state — same user action, now persisted.
- *
- * TODO: implement all three once agents/stylistPipeline.js and
- * config/firestore.js are wired up.
+ * GET    /api/looks/saved      -> read users/{uid}/savedLooks
+ * POST   /api/looks/saved      -> save one look (My Looks, persisted)
+ * DELETE /api/looks/saved/:id  -> remove a saved look
  */
 import { Router } from "express";
 import { verifyGoogleToken } from "../middleware/verifyGoogleToken.js";
+import { runStylistPipeline } from "../agents/stylistPipeline.js";
+import { db } from "../config/firestore.js";
 
 const router = Router();
 
 router.post("/generate", verifyGoogleToken, async (req, res) => {
-  res.status(501).json({ error: "POST /api/looks/generate not implemented yet" });
+  try {
+    const { photoAnalyses, styleRequest } = req.body;
+    if (!photoAnalyses?.length || !styleRequest) {
+      return res.status(400).json({ error: "photoAnalyses (non-empty) and styleRequest are required" });
+    }
+
+    const result = await runStylistPipeline({ uid: req.user.uid, photoAnalyses, styleRequest });
+    res.json(result);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 router.get("/saved", verifyGoogleToken, async (req, res) => {
-  res.status(501).json({ error: "GET /api/looks/saved not implemented yet" });
+  try {
+    const snapshot = await db.collection(`users/${req.user.uid}/savedLooks`).get();
+    const looks = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    res.json({ looks });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
-router.post("/save", verifyGoogleToken, async (req, res) => {
-  res.status(501).json({ error: "POST /api/looks/save not implemented yet" });
+router.post("/saved", verifyGoogleToken, async (req, res) => {
+  try {
+    const { look } = req.body;
+    if (!look) return res.status(400).json({ error: "look is required" });
+
+    const docRef = await db.collection(`users/${req.user.uid}/savedLooks`).add({
+      ...look,
+      savedAt: new Date().toISOString(),
+    });
+    res.json({ id: docRef.id });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+router.delete("/saved/:id", verifyGoogleToken, async (req, res) => {
+  try {
+    await db.collection(`users/${req.user.uid}/savedLooks`).doc(req.params.id).delete();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 export default router;

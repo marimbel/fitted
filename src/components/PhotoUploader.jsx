@@ -4,10 +4,11 @@ import { useRef } from "react";
  * PhotoUploader.jsx
  *
  * Lets the user pick an image from their own computer and shows a live
- * preview of it. The photo itself is never uploaded anywhere — it's read
- * entirely in the browser using the FileReader API and stored as a data
- * URL string in the parent App component's state (lifted state, same
- * pattern as selectedProduct and favorites).
+ * preview of it. The photo itself is never uploaded anywhere for the
+ * local-file path — it's read entirely in the browser using the
+ * FileReader API and stored as a data URL string in the parent App
+ * component's state (lifted state, same pattern as selectedProduct and
+ * favorites).
  *
  * `useRef` here holds a reference to the hidden <input type="file">
  * DOM node so the visible "Choose Photo" button can trigger it
@@ -17,8 +18,15 @@ import { useRef } from "react";
  * Props:
  *   photo          - data URL string of the uploaded photo, or null
  *   onPhotoSelected - (dataUrl: string) => void
+ *   onImportFromGooglePhotos - optional () => void. When provided, a
+ *     second button offers to import a photo from Google Photos instead
+ *     of the local filesystem (Project 2's SocialNetwork X source —
+ *     see hooks/useGooglePhotosPicker.js). Omitting this prop keeps the
+ *     component working exactly as it did in Project 1.
+ *   googlePhotosStatus - optional status string from that hook, shown
+ *     as a small loading note while a picker session is in progress.
  */
-export default function PhotoUploader({ photo, onPhotoSelected }) {
+export default function PhotoUploader({ photo, onPhotoSelected, onImportFromGooglePhotos, googlePhotosStatus }) {
   const fileInputRef = useRef(null);
 
   function handleChooseClick() {
@@ -37,6 +45,8 @@ export default function PhotoUploader({ photo, onPhotoSelected }) {
     };
     reader.readAsDataURL(file);
   }
+
+  const importBusy = googlePhotosStatus && !["idle", "done", "error"].includes(googlePhotosStatus);
 
   return (
     <div className="photo-uploader">
@@ -67,6 +77,22 @@ export default function PhotoUploader({ photo, onPhotoSelected }) {
       <button type="button" className="btn-fitted btn-dark w-100" onClick={handleChooseClick}>
         Choose Photo
       </button>
+
+      {onImportFromGooglePhotos && (
+        <>
+          <button
+            type="button"
+            className="btn-fitted btn-outline w-100 mt-2"
+            onClick={onImportFromGooglePhotos}
+            disabled={importBusy}
+          >
+            {importBusy ? "Importing from Google Photos…" : "Import from Google Photos"}
+          </button>
+          {googlePhotosStatus === "error" && (
+            <p className="style-request-error mt-1">Couldn't import from Google Photos. Try again.</p>
+          )}
+        </>
+      )}
     </div>
   );
 }

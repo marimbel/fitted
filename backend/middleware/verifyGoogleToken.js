@@ -8,32 +8,45 @@
  * needs — no separate Firebase Authentication service, per the proposal
  * review's simplification.
  *
- * TODO: implement. Rough shape:
+ * The frontend sends the ID token as a normal bearer token:
+ *   Authorization: Bearer <idToken>
  *
- *   import { OAuth2Client } from "google-auth-library";
- *   const client = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID);
- *
- *   export async function verifyGoogleToken(req, res, next) {
- *     const idToken = req.headers.authorization?.replace("Bearer ", "");
- *     if (!idToken) return res.status(401).json({ error: "Missing token" });
- *     try {
- *       const ticket = await client.verifyIdToken({
- *         idToken,
- *         audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
- *       });
- *       req.user = ticket.getPayload(); // includes sub (uid), email, name
- *       next();
- *     } catch (err) {
- *       res.status(401).json({ error: "Invalid token" });
- *     }
- *   }
- *
- * Apply this to every route under /api/photos, /api/audio, /api/looks
- * that needs to know which user is making the request (that's all of
- * them — every Firestore path is scoped to users/{uid}/...).
+ * Note this is a DIFFERENT token from the Google OAuth *access* token
+ * used for the Photos Picker API (see services/googlePhotosService.js).
+ * The ID token says "who is this person" (verified here); the access
+ * token says "this app may call the Photos Picker API on their behalf"
+ * and is sent separately in the request body for the photos routes.
  */
+import { OAuth2Client } from "google-auth-library";
+
+const client = new OAuth2Client(process.env.GOOGLE_OAUTH_CLIENT_ID);
+
 export async function verifyGoogleToken(req, res, next) {
-  // TODO: replace with the real implementation above once
-  // GOOGLE_OAUTH_CLIENT_ID is set up in Google Cloud Console.
-  res.status(501).json({ error: "verifyGoogleToken not implemented yet" });
+  const authHeader = req.headers.authorization || "";
+  const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!idToken) {
+    return res.status(401).json({ error: "Missing Authorization: Bearer <idToken> header" });
+  }
+
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_OAUTH_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+
+    // `sub` is Google's stable, unique id for this account — this is what
+    // every Firestore path uses as {uid}, never the email (emails can
+    // change; sub never does).
+    req.user = {
+      uid: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture,
+    };
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid or expired Google ID token" });
+  }
 }

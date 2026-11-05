@@ -352,3 +352,130 @@
   margin-bottom: var(--space-md);
   font-size: 0.9rem;
 }
+
+/* ---- Project 2: AI recommendations section (FittingRoomPage) ---- */
+
+.ai-recommendations {
+  margin-top: var(--space-xl);
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border);
+}
+
+.ai-recommendations-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 900px) {
+  .ai-recommendations-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ai-recommendations-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.google-auth-panel {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg-secondary);
+}
+
+.google-auth-profile {
+  font-size: 0.9rem;
+  margin-bottom: var(--space-xs);
+}
+
+.google-auth-actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.style-request-recorder {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.style-request-status {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+}
+
+.style-request-error {
+  color: #b0523f;
+}
+
+.style-request-summary {
+  margin-top: var(--space-sm);
+  font-size: 0.85rem;
+}
+
+.style-request-transcript {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+
+.style-request-facts {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-xs) 0 0;
+}
+
+.style-request-facts li {
+  font-size: 0.82rem;
+  padding: 2px 0;
+}
+
+.look-results-panel {
+  padding: var(--space-sm) 0;
+}
+
+.look-results-meta {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.look-results-summary {
+  font-size: 0.88rem;
+  margin-top: var(--space-xs);
+}
+
+.look-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.look-card {
+  padding: var(--space-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: #fff;
+}
+
+.look-card-items {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-xs) 0;
+  font-size: 0.85rem;
+}
+
+.look-card-total {
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+}
+
+.look-card-reasoning {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
