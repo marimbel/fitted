@@ -12,7 +12,12 @@
  * browser code, as a safety boundary against accidentally shipping
  * server secrets into the bundle.
  */
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+// In production (Cloud Run) the backend serves the built frontend from the
+// same origin, so VITE_API_BASE_URL is left unset there and this falls back
+// to "" (relative paths, e.g. fetch("/api/..."), which just hit the same
+// host). Locally the frontend and backend run on different ports, so
+// .env sets VITE_API_BASE_URL=http://localhost:8080 explicitly.
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export async function apiFetch(path, { idToken, ...options } = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };

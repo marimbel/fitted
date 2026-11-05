@@ -41,32 +41,43 @@ intentionally, per the Project 1 scope.
 
 ## Project Structure
 
+Since Project 2, the repo is split into a `frontend/` (this file's
+Project 1 content below) and a `backend/` (the Project 2 Express API —
+see inline comments in `backend/app.js` and the Project 2 proposal
+response doc for its architecture):
+
 ```
 fitted/
-├── index.html              # Home (static HTML/CSS/JS)
-├── about.html               # About (static HTML/CSS/JS)
-├── contact.html              # Contact (static HTML/CSS/JS)
-├── app.html                  # Mounts the React "Virtual Fitting Room" SPA
-├── login.html                 # Mounts the React Login page
-├── vite.config.js             # Multi-page build configuration
-├── package.json
-├── public/                    # Static assets, copied as-is by Vite
-│   ├── css/                   # shared.css (design system) + per-page CSS
-│   ├── js/                    # main.js (shared) + contact.js
-│   └── images/                # Local SVG placeholder images (hero + products)
-├── src/                        # React source (used by app.html & login.html)
-│   ├── App.jsx                 # Root of the Fitting Room SPA (routing + state)
-│   ├── LoginApp.jsx             # Root of the Login page
-│   ├── main-app.jsx              # React entry point for app.html
-│   ├── main-login.jsx             # React entry point for login.html
-│   ├── components/                 # Reusable React components
-│   ├── pages/                       # Shop / Fitting Room / My Looks pages
-│   ├── data/products.js               # Mock product catalog
-│   ├── services/tryOnService.js       # Simulated try-on API abstraction
-│   └── styles/                         # React-page-specific CSS
-├── DockerContainer/
+├── frontend/                  # Everything described in this README
+│   ├── index.html              # Home (static HTML/CSS/JS)
+│   ├── about.html               # About (static HTML/CSS/JS)
+│   ├── contact.html              # Contact (static HTML/CSS/JS)
+│   ├── app.html                   # Mounts the React "Virtual Fitting Room" SPA
+│   ├── login.html                  # Mounts the React Login page
+│   ├── vite.config.js              # Multi-page build configuration
+│   ├── package.json
+│   ├── public/                     # Static assets, copied as-is by Vite
+│   │   ├── css/                    # shared.css (design system) + per-page CSS
+│   │   ├── js/                     # main.js (shared) + contact.js
+│   │   └── images/                 # Local SVG placeholder images (hero + products)
+│   └── src/                         # React source (used by app.html & login.html)
+│       ├── App.jsx                   # Root of the Fitting Room SPA (routing + state)
+│       ├── LoginApp.jsx                # Root of the Login page
+│       ├── main-app.jsx                 # React entry point for app.html
+│       ├── main-login.jsx                # React entry point for login.html
+│       ├── components/                     # Reusable React components
+│       ├── pages/                           # Shop / Fitting Room / My Looks pages
+│       ├── data/products.js                   # Mock product catalog
+│       ├── services/apiClient.js               # Shared fetch wrapper to the backend
+│       └── styles/                               # React-page-specific CSS
+├── backend/                   # Project 2 Express API (auth, Photos, Gemini, Firestore)
+│   ├── app.js                  # Entry point; also serves frontend/dist in production
+│   ├── routes/ middleware/ services/ agents/ config/ data/ tests/
+│   └── package.json
+├── DockerContainer/            # Project 1's Apache-only static-site image
 │   ├── Dockerfile
 │   └── README.md
+├── Dockerfile                  # Project 2: combined frontend+backend Cloud Run image
 └── README.md                            # (this file)
 ```
 
@@ -159,6 +170,7 @@ All components live in `src/components/`:
 ## Running Locally
 
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
@@ -175,12 +187,13 @@ there:
 ## Building the React Application
 
 ```bash
+cd frontend
 npm run build
 ```
 
 This runs Vite's production build for **all five pages** (not just the
-React ones) and outputs everything to `dist/`. Preview the production
-build locally with:
+React ones) and outputs everything to `frontend/dist/`. Preview the
+production build locally with:
 
 ```bash
 npm run preview
@@ -188,15 +201,53 @@ npm run preview
 
 ## Docker Deployment
 
-See [`DockerContainer/README.md`](./DockerContainer/README.md) for full
-details. Quick start from the project root:
+There are two separate Docker images in this repo, for two different
+purposes:
 
-```bash
-docker build -t fitted -f DockerContainer/Dockerfile .
-docker run -p 8080:80 fitted
-```
+- **`DockerContainer/Dockerfile`** — Project 1's image: Apache serving
+  only the static frontend build, no backend. Quick start from the
+  project root:
 
-Then visit `http://localhost:8080`.
+  ```bash
+  docker build -t fitted -f DockerContainer/Dockerfile .
+  docker run -p 8080:80 fitted
+  ```
+
+  Then visit `http://localhost:8080`.
+
+- **`Dockerfile`** (repo root) — Project 2's image: the real Express
+  backend, also serving the built frontend from the same origin, so the
+  whole app is one live URL with no CORS setup needed. This is what
+  deploys to Cloud Run:
+
+  ```bash
+  gcloud run deploy fitted \
+    --source . \
+    --region us-central1 \
+    --allow-unauthenticated \
+    --set-env-vars GCP_PROJECT_ID=fitted-project2,GOOGLE_OAUTH_CLIENT_ID=<client-id>,GEMINI_API_KEY=<gemini-key>,GEMINI_MODEL=gemini-2.0-flash
+  ```
+
+  (Values for `<client-id>` / `<gemini-key>` are the same ones in
+  `backend/.env` — see `backend/.env.example` for what each one is.)
+
+  One-time setup before the first deploy:
+  1. `gcloud config set project fitted-project2`
+  2. Make sure Firestore can be reached from the deployed service — the
+     default Compute Engine service account Cloud Run uses usually
+     already has this, but if Firestore calls 403 in the logs, grant it
+     explicitly:
+     ```bash
+     gcloud projects add-iam-policy-binding fitted-project2 \
+       --member="serviceAccount:$(gcloud projects describe fitted-project2 --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
+       --role="roles/datastore.user"
+     ```
+  3. After the first deploy prints a `*.run.app` URL, add that exact URL
+     to the OAuth Client's **Authorized JavaScript origins** in Google
+     Cloud Console (Credentials → the Client ID → Authorized JavaScript
+     origins → Add URI) — Google sign-in will fail on the live site
+     until that's added, the same way `http://localhost:5173` had to be
+     added for local dev.
 
 ## Future Project 2 Architecture
 

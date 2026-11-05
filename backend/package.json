@@ -8,15 +8,16 @@
   "scripts": {
     "dev": "node --watch app.js",
     "start": "node app.js",
-    "test": "node --test tests/"
+    "test": "node --test tests/*.test.js"
   },
   "dependencies": {
-    "express": "^4.21.0",
+    "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/logging": "^11.4.0",
+    "@google/generative-ai": "^0.21.0",
+    "axios": "^1.21.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "google-auth-library": "^9.14.0",
-    "@google-cloud/firestore": "^7.10.0",
-    "@google/generative-ai": "^0.21.0"
-  },
-  "devDependencies": {}
+    "express": "^4.21.0",
+    "google-auth-library": "^9.14.0"
+  }
 }

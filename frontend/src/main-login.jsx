@@ -2,6 +2,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import LoginApp from "./LoginApp.jsx";
 import "./styles/login.css";
+import { initAnalytics, trackPageview } from "./services/analytics.js";
+
+initAnalytics();
+trackPageview("/login.html");
 
 // Mounts the Login page into the <div id="root"> defined in login.html.
 // Per the assignment, login.html contains only the minimal markup needed

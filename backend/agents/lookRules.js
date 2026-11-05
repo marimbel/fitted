@@ -4,7 +4,7 @@
  * The hard, deterministic rules LookCritic checks before the model
  * weighs in at all — per the proposal response: "these are facts, so
  * the model never has to do arithmetic." This file is plain code, not
- * an agent; stylistPipeline's beforeAgentCallback runs it and writes
+ * an agent; the Orchestrator's beforeAgentCallback runs it and writes
  * the result to session state as `ruleCheck` for LookCritic to read.
  */
 import { findProduct } from "../data/products.js";
@@ -14,7 +14,7 @@ import { findProduct } from "../data/products.js";
  * the current candidate set, used only for the duplicate check.
  *
  * Returns a report object; `passed` is true only if every rule is
- * satisfied — afterAgentCallback in stylistPipeline.js uses that single
+ * satisfied — afterAgentCallback in orchestrator.js uses that single
  * boolean to force verdict: "revise" regardless of what the model says.
  */
 export function checkLookRules(look, styleRequest, otherLooks = []) {

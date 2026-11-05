@@ -3,7 +3,7 @@
  *
  * POST /api/looks/generate
  *   Body: { photoAnalyses, styleRequest } — runs the full agent
- *   pipeline (agents/stylistPipeline.js) and returns the generated
+ *   pipeline (agents/orchestrator.js) and returns the generated
  *   looks plus the critique trace (how many loop iterations, what
  *   LookCritic flagged each round).
  *
@@ -13,7 +13,7 @@
  */
 import { Router } from "express";
 import { verifyGoogleToken } from "../middleware/verifyGoogleToken.js";
-import { runStylistPipeline } from "../agents/stylistPipeline.js";
+import { runOrchestrator } from "../agents/orchestrator.js";
 import { db } from "../config/firestore.js";
 
 const router = Router();
@@ -25,7 +25,7 @@ router.post("/generate", verifyGoogleToken, async (req, res) => {
       return res.status(400).json({ error: "photoAnalyses (non-empty) and styleRequest are required" });
     }
 
-    const result = await runStylistPipeline({ uid: req.user.uid, photoAnalyses, styleRequest });
+    const result = await runOrchestrator({ uid: req.user.uid, photoAnalyses, styleRequest });
     res.json(result);
   } catch (err) {
     res.status(502).json({ error: err.message });

@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { trackEvent } from "../services/analytics.js";
 
 /**
  * PhotoUploader.jsx
@@ -42,6 +43,7 @@ export default function PhotoUploader({ photo, onPhotoSelected, onImportFromGoog
     const reader = new FileReader();
     reader.onload = () => {
       onPhotoSelected(reader.result);
+      trackEvent({ category: "Engagement", action: "Uploaded Photo", label: "Local File" });
     };
     reader.readAsDataURL(file);
   }

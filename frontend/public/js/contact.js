@@ -35,6 +35,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Simulate a successful submission.
     confirmationMessage.classList.remove("d-none");
 
+    // GA4 event for this static (non-React) page -- gtag() is defined by
+    // the snippet in this page's <head>. Guarded in case GA4 hasn't
+    // loaded yet (e.g. an ad blocker, or the measurement id isn't
+    // configured in this environment) so a blocked analytics script
+    // never breaks the actual form.
+    if (typeof gtag === "function") {
+      gtag("event", "contact_form_submitted", { event_category: "Engagement" });
+    }
+
     // Reset the form fields but keep the confirmation message visible.
     form.reset();
     form.classList.remove("was-validated");

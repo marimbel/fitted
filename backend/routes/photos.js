@@ -29,7 +29,7 @@ router.post("/session", verifyGoogleToken, async (req, res) => {
     const { accessToken } = req.body;
     if (!accessToken) return res.status(400).json({ error: "accessToken is required" });
 
-    const session = await createPickingSession(accessToken);
+    const session = await createPickingSession(accessToken, req.user.uid);
     res.json({ id: session.id, pickerUri: session.pickerUri, mediaItemsSet: session.mediaItemsSet });
   } catch (err) {
     res.status(502).json({ error: err.message });
@@ -41,7 +41,7 @@ router.get("/session/:id", verifyGoogleToken, async (req, res) => {
     const { accessToken } = req.query;
     if (!accessToken) return res.status(400).json({ error: "accessToken query param is required" });
 
-    const session = await getSession(accessToken, req.params.id);
+    const session = await getSession(accessToken, req.params.id, req.user.uid);
     res.json({ id: session.id, mediaItemsSet: Boolean(session.mediaItemsSet) });
   } catch (err) {
     res.status(502).json({ error: err.message });
@@ -55,8 +55,8 @@ router.post("/analyze", verifyGoogleToken, async (req, res) => {
       return res.status(400).json({ error: "accessToken and sessionId are required" });
     }
 
-    const mediaItems = await listPickedMediaItems(accessToken, sessionId);
-    const photos = await fetchPickedPhotos(accessToken, mediaItems);
+    const mediaItems = await listPickedMediaItems(accessToken, sessionId, req.user.uid);
+    const photos = await fetchPickedPhotos(accessToken, mediaItems, req.user.uid);
 
     const analyses = [];
     for (const photo of photos) {

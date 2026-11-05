@@ -1,11 +1,26 @@
-import { useState } from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import SpaTabs from "./components/SpaTabs.jsx";
 import FittingRoomPage from "./pages/FittingRoomPage.jsx";
 import ShopPage from "./pages/ShopPage.jsx";
 import MyLooksPage from "./pages/MyLooksPage.jsx";
 import { useGoogleAuth } from "./hooks/useGoogleAuth.js";
+import { trackPageview, trackEvent } from "./services/analytics.js";
+
+// HashRouter navigation (e.g. #/shop) never triggers a real browser page
+// load, so GA4 can't see those "page" changes on its own -- this small
+// component sends one manually every time the SPA's route changes.
+// useLocation() only works inside a Router, which is why this is its
+// own component rendered under <HashRouter> below, rather than logic
+// inside App() itself.
+function RouteTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackPageview(`/app.html#${location.pathname}`);
+  }, [location.pathname]);
+  return null;
+}
 
 /**
  * App.jsx
@@ -39,15 +54,22 @@ export default function App() {
   const auth = useGoogleAuth();
 
   function handleToggleFavorite(product) {
+    const willFavorite = !favoriteIds.includes(product.id);
     setFavoriteIds((currentIds) =>
       currentIds.includes(product.id)
         ? currentIds.filter((id) => id !== product.id) // remove
         : [...currentIds, product.id] // add
     );
+    trackEvent({
+      category: "Engagement",
+      action: willFavorite ? "Favorited Product" : "Unfavorited Product",
+      label: product.name,
+    });
   }
 
   return (
     <HashRouter>
+      <RouteTracker />
       <Navbar activePage="app" />
 
       <div className="container-fitted spa-shell">

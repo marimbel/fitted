@@ -16,6 +16,20 @@
   <!-- Fitted shared design system + page-specific styles -->
   <link rel="stylesheet" href="/css/shared.css" />
   <link rel="stylesheet" href="/css/home.css" />
+
+  <!-- GA4 (Google Analytics 4) client-side pageview tracking, same
+       property as the React pages (see src/services/analytics.js).
+       Loaded directly with Google's gtag.js since this is a plain
+       static page, not React. Vite replaces %VITE_GA4_MEASUREMENT_ID%
+       with the real value at build time (same mechanism as any other
+       VITE_ env var; see .env / .env.production). -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA4_MEASUREMENT_ID%"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "%VITE_GA4_MEASUREMENT_ID%");
+  </script>
 </head>
 <body>
 

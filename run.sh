@@ -38,21 +38,25 @@ if [ "$(uname)" = "Linux" ] && [ "$(id -u)" -ne 0 ]; then
   DOCKER="sudo docker"
 fi
 
+# The Vite frontend lives in frontend/ since the Project 2 reorganization
+# (see README.md); the Express backend lives in backend/ and is run
+# separately (cd backend && npm run dev) — this script only drives the
+# frontend static build + Docker steps that were part of Project 1.
 install_deps() {
-  echo "==> Installing npm dependencies..."
-  npm install
+  echo "==> Installing npm dependencies (frontend/)..."
+  (cd frontend && npm install)
 }
 
 ensure_deps() {
   # Install dependencies only if node_modules is missing.
-  [ -d node_modules ] || install_deps
+  [ -d frontend/node_modules ] || install_deps
 }
 
 build_site() {
   ensure_deps
-  echo "==> Building production site into dist/ ..."
-  npm run build
-  echo "==> Done. Built files are in dist/"
+  echo "==> Building production site into frontend/dist/ ..."
+  (cd frontend && npm run build)
+  echo "==> Done. Built files are in frontend/dist/"
 }
 
 docker_build() {
@@ -111,7 +115,7 @@ s3_deploy() {
   echo "==> Uploading dist/ to s3://$BUCKET ..."
   # sync uploads the CONTENTS of dist/ to the bucket root and
   # --delete removes files from the bucket that no longer exist locally.
-  aws s3 sync dist/ "s3://$BUCKET" --delete
+  aws s3 sync frontend/dist/ "s3://$BUCKET" --delete
   echo "==> Uploaded. Open the bucket's Static website hosting endpoint to view it."
 }
 
@@ -121,9 +125,9 @@ show_help() {
 
 case "${1:-help}" in
   install)      install_deps ;;
-  dev)          ensure_deps; npm run dev ;;
+  dev)          ensure_deps; (cd frontend && npm run dev) ;;
   build)        build_site ;;
-  preview)      build_site; npm run preview ;;
+  preview)      build_site; (cd frontend && npm run preview) ;;
   docker-build) docker_build ;;
   docker-run)   docker_run ;;
   docker-stop)  docker_stop; echo "==> Stopped." ;;

@@ -12,6 +12,8 @@ import { simulateTryOn } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
 import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
+import { trackEvent } from "../services/analytics.js";
+import { logEvent, logError } from "../services/logger.js";
 
 /**
  * FittingRoomPage.jsx
@@ -87,6 +89,12 @@ export default function FittingRoomPage({
 
   async function handleGenerateLooks() {
     if (!photoAnalyses.length || !styleRequest) return;
+    // This click is the clearest "Called Gemini API" moment in the
+    // whole app — it kicks off the full StyleAnalyst -> loop(LookBuilder
+    // <-> LookCritic) pipeline — so it's the headline example event
+    // straight from the syllabus's own GA4 sample code.
+    trackEvent({ category: "API Request", action: "Called Gemini API", label: "Generate Looks" });
+    const startedAt = Date.now();
     try {
       setLookStatus("loading");
       setLookError(null);
@@ -97,9 +105,15 @@ export default function FittingRoomPage({
       });
       setLookResult(result);
       setLookStatus("done");
+      logEvent("looks_generated", {
+        iterations: result?.critique?.iterations,
+        verdict: result?.critique?.verdict,
+        durationMs: Date.now() - startedAt,
+      });
     } catch (err) {
       setLookError(err.message);
       setLookStatus("error");
+      logError("looks_generate_failed", err);
     }
   }
 
@@ -110,9 +124,13 @@ export default function FittingRoomPage({
         method: "POST",
         body: JSON.stringify({ look }),
       });
-    } catch {
+      trackEvent({ category: "Engagement", action: "Saved Look", label: "My Looks" });
+    } catch (err) {
       // A failed save here is non-critical to the rest of the page —
-      // the look is still visible in the results panel either way.
+      // the look is still visible in the results panel either way —
+      // but it's still worth a log entry to notice if this starts
+      // failing often.
+      logError("look_save_failed", err);
     }
   }
 

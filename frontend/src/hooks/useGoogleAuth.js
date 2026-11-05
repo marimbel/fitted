@@ -19,6 +19,8 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/apiClient.js";
+import { trackEvent } from "../services/analytics.js";
+import { logEvent, logError } from "../services/logger.js";
 
 const PHOTOS_SCOPE = "https://www.googleapis.com/auth/photospicker.mediaitems.readonly";
 
@@ -44,8 +46,11 @@ export function useGoogleAuth() {
         try {
           const { user } = await apiFetch("/api/auth/me", { idToken: response.credential });
           setProfile(user);
-        } catch {
+          trackEvent({ category: "Auth", action: "Signed In", label: "Google Sign-In" });
+          logEvent("sign_in_succeeded", { uid: user?.uid });
+        } catch (err) {
           setProfile(null);
+          logError("sign_in_failed", err);
         }
       },
     });
