@@ -10,7 +10,6 @@ import LookResultsPanel from "../components/LookResultsPanel.jsx";
 import { CATEGORIES, PRODUCTS } from "../data/products.js";
 import { simulateTryOn } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
-import { useGoogleAuth } from "../hooks/useGoogleAuth.js";
 import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
 
@@ -39,6 +38,7 @@ export default function FittingRoomPage({
   onSelectProduct,
   favoriteIds,
   onToggleFavorite,
+  auth,
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -46,8 +46,9 @@ export default function FittingRoomPage({
   const [tryOnStatus, setTryOnStatus] = useState("idle");
   const [tryOnMessage, setTryOnMessage] = useState("");
 
-  // --- Project 2: Google sign-in, Photos import, voice style request ---
-  const auth = useGoogleAuth();
+  // --- Project 2: Photos import + voice style request. `auth` itself is
+  // now a prop (lifted up to App.jsx) so My Looks can read back what's
+  // saved under the same signed-in account. ---
   const photosPicker = useGooglePhotosPicker({ idToken: auth.idToken, accessToken: auth.accessToken });
   const recorder = useVoiceRecorder();
 

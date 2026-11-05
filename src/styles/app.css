@@ -479,3 +479,9 @@
   color: var(--color-text-secondary);
   margin-bottom: var(--space-sm);
 }
+
+.saved-looks-section {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border);
+}
