@@ -1,29 +1,31 @@
 # Fitted
 
-An AI-powered fashion and virtual try-on platform — **Project 1** frontend
-prototype for a graduate Web Systems course.
+An AI-powered fashion and virtual try-on platform, built for a graduate
+Web Systems course. Fitted started as a Project 1 frontend-only
+prototype and is now a real full-stack app for Project 2: a React
+frontend, an Express backend, a multi-agent Gemini pipeline, Google
+sign-in with Google Photos import, Firestore persistence, and
+Cloud Run deployment.
 
-Fitted's long-term concept: browse clothing, upload a photo of yourself,
-select an item, and preview how it would look on you using an AI virtual
-try-on service. **Project 1 builds only the frontend**, with mock data and
-simulated interactions in place of the real backend, database, and AI
-integrations that would arrive in Project 2.
+A user signs in with Google, imports or uploads photos, records a
+spoken style request, and asks Fitted for look recommendations. Behind
+that request, a team of agents (described below, under
+**AI Agent Architecture**) analyzes the photos, builds candidate
+outfits from the product catalog, and critiques them against both
+hard rules and style judgment before returning a result. The one piece
+still mocked is the virtual try-on preview image itself (P3) — see
+**What's Not Yet Built**.
 
 ## Project Description
 
-Fitted is designed like a real early-stage fashion startup would build it:
-a small set of marketing/informational pages (Home, About, Contact) built
-with traditional HTML/CSS/JS, plus a product-facing single-page application
-(the "Virtual Fitting Room") and a Login page, both built with React. The
-whole site shares one visual design system — a minimal, editorial, neutral
-color palette meant to feel like a premium fashion brand rather than a
-generic SaaS dashboard.
-
-Every interaction that would eventually need a backend (product data,
-photo storage, the AI try-on itself, authentication) is either mocked with
-local data or clearly isolated behind a single function/service so it can
-be replaced with a real API call in Project 2 **without restructuring the
-app**.
+Fitted is designed like a real early-stage fashion startup would build
+it: a small set of marketing/informational pages (Home, About,
+Contact) built with traditional HTML/CSS/JS, plus a product-facing
+single-page application (the "Virtual Fitting Room") and a Login page,
+both built with React, all talking to a real Express backend. The
+whole site shares one visual design system — a minimal, editorial,
+neutral color palette meant to feel like a premium fashion brand
+rather than a generic SaaS dashboard.
 
 ## Technologies
 
@@ -32,19 +34,27 @@ app**.
 - **React 18** — the App (Virtual Fitting Room) and Login pages
 - **React Router** (`HashRouter`) — client-side navigation inside the App SPA
 - **Vite** — development server and production build tool, configured as a
-  multi-page app (see `vite.config.js`) so the static pages and the two
-  React entry points build into one `dist/` folder together
-- **Apache + Docker** — serves the production build (see `DockerContainer/`)
-
-No backend, database, authentication service, or external AI API is used —
-intentionally, per the Project 1 scope.
+  multi-page app (see `frontend/vite.config.js`) so the static pages and the
+  two React entry points build into one `dist/` folder together
+- **Node.js + Express** (`backend/`) — the real API: authentication,
+  photo analysis, look generation, logging, and analytics
+- **Gemini API** (`@google/generative-ai`) — every agent's structured
+  reasoning call (see **AI Agent Architecture**)
+- **Google Identity Services + Google Photos Picker API** — real
+  Google sign-in and photo import
+- **Firestore** (`@google-cloud/firestore`) — persistence for photo
+  analyses, style requests, and generated look sets
+- **Google Cloud Logging + Google Analytics 4** — structured server
+  logs and client/server usage analytics
+- **Docker + Cloud Run** — single-container production deployment (see
+  **Docker Deployment**)
 
 ## Project Structure
 
-Since Project 2, the repo is split into a `frontend/` (this file's
-Project 1 content below) and a `backend/` (the Project 2 Express API —
-see inline comments in `backend/app.js` and the Project 2 proposal
-response doc for its architecture):
+The repo is split into a `frontend/` (the React + static-HTML client
+described below) and a `backend/` (the Express API — see inline
+comments in `backend/app.js` and the Project 2 proposal response doc
+for its architecture):
 
 ```
 fitted/
@@ -74,7 +84,7 @@ fitted/
 │   ├── app.js                  # Entry point; also serves frontend/dist in production
 │   ├── routes/ middleware/ services/ agents/ config/ data/ tests/
 │   └── package.json
-├── DockerContainer/            # Project 1's Apache-only static-site image
+├── DockerContainer/            # Legacy Project 1 submission: Apache-only static-site image
 │   ├── Dockerfile
 │   └── README.md
 ├── Dockerfile                  # Project 2: combined frontend+backend Cloud Run image
@@ -201,75 +211,191 @@ npm run preview
 
 ## Docker Deployment
 
-There are two separate Docker images in this repo, for two different
-purposes:
+The real deployment is the root **`Dockerfile`**: the Express backend,
+also serving the built frontend from the same origin, so the whole app
+is one live URL with no CORS setup needed. This is what deploys to
+Cloud Run:
 
-- **`DockerContainer/Dockerfile`** — Project 1's image: Apache serving
-  only the static frontend build, no backend. Quick start from the
-  project root:
+```bash
+gcloud run deploy fitted \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --set-env-vars GCP_PROJECT_ID=fitted-project2,GOOGLE_OAUTH_CLIENT_ID=<client-id>,GEMINI_API_KEY=<gemini-key>,GEMINI_MODEL=gemini-2.0-flash
+```
 
-  ```bash
-  docker build -t fitted -f DockerContainer/Dockerfile .
-  docker run -p 8080:80 fitted
-  ```
+(Values for `<client-id>` / `<gemini-key>` are the same ones in
+`backend/.env` — see `backend/.env.example` for what each one is.)
 
-  Then visit `http://localhost:8080`.
+One-time setup before the first deploy:
+1. `gcloud config set project fitted-project2`
+2. Make sure Firestore can be reached from the deployed service — the
+   default Compute Engine service account Cloud Run uses usually
+   already has this, but if Firestore calls 403 in the logs, grant it
+   explicitly:
+   ```bash
+   gcloud projects add-iam-policy-binding fitted-project2 \
+     --member="serviceAccount:$(gcloud projects describe fitted-project2 --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
+     --role="roles/datastore.user"
+   ```
+3. After the first deploy prints a `*.run.app` URL, add that exact URL
+   to the OAuth Client's **Authorized JavaScript origins** in Google
+   Cloud Console (Credentials → the Client ID → Authorized JavaScript
+   origins → Add URI) — Google sign-in will fail on the live site
+   until that's added, the same way `http://localhost:5173` had to be
+   added for local dev.
 
-- **`Dockerfile`** (repo root) — Project 2's image: the real Express
-  backend, also serving the built frontend from the same origin, so the
-  whole app is one live URL with no CORS setup needed. This is what
-  deploys to Cloud Run:
+`DockerContainer/Dockerfile` is kept from the Project 1 submission —
+it builds an Apache-only image of just the static frontend, with no
+backend, and is no longer how Fitted is actually deployed.
 
-  ```bash
-  gcloud run deploy fitted \
-    --source . \
-    --region us-central1 \
-    --allow-unauthenticated \
-    --set-env-vars GCP_PROJECT_ID=fitted-project2,GOOGLE_OAUTH_CLIENT_ID=<client-id>,GEMINI_API_KEY=<gemini-key>,GEMINI_MODEL=gemini-2.0-flash
-  ```
+## AI Agent Architecture
 
-  (Values for `<client-id>` / `<gemini-key>` are the same ones in
-  `backend/.env` — see `backend/.env.example` for what each one is.)
+Fitted's recommendation flow is built from five named agents, coordinated
+by one Orchestrator, rather than a single unlabeled Gemini call:
 
-  One-time setup before the first deploy:
-  1. `gcloud config set project fitted-project2`
-  2. Make sure Firestore can be reached from the deployed service — the
-     default Compute Engine service account Cloud Run uses usually
-     already has this, but if Firestore calls 403 in the logs, grant it
-     explicitly:
-     ```bash
-     gcloud projects add-iam-policy-binding fitted-project2 \
-       --member="serviceAccount:$(gcloud projects describe fitted-project2 --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
-       --role="roles/datastore.user"
-     ```
-  3. After the first deploy prints a `*.run.app` URL, add that exact URL
-     to the OAuth Client's **Authorized JavaScript origins** in Google
-     Cloud Console (Credentials → the Client ID → Authorized JavaScript
-     origins → Add URI) — Google sign-in will fail on the live site
-     until that's added, the same way `http://localhost:5173` had to be
-     added for local dev.
+- **Orchestrator** — the top-level agent. Decides what runs next and in
+  what order; nothing else in the backend talks to Gemini or the rule
+  checker directly.
+- **StyleAnalyst** — summarizes a user's photo analyses into a "Style
+  DNA" profile (colors, silhouettes, aesthetic, formality).
+- **LookBuilder** — proposes complete outfit looks from the product
+  catalog, using the Style DNA and the user's spoken style request.
+- **LookCritic** — reviews each look against deterministic rules (budget,
+  category completeness, avoid-words, duplicates) and its own judgment
+  (style fit, weather, occasion).
+- **Presenter** — *(planned, not yet implemented — see the TODO comment
+  in `backend/agents/orchestrator.js`)* will write a stylist note for the
+  winning look, generate a try-on preview image, and save the result.
 
-## Future Project 2 Architecture
+### Implementation status (updated as the rework lands)
 
-Project 1 was deliberately structured so Project 2 can add a real backend
-without reworking the frontend:
+| Agent | Status today | Planned upgrade |
+|---|---|---|
+| Orchestrator | ✅ Implemented — hard-coded sequential + loop control flow | — |
+| StyleAnalyst | ✅ Implemented as a single structured Gemini call | Real tool-calling: `getPhotoAnalyses(uid)`, `analyzeNewPhotos(uid)` |
+| LookBuilder | ✅ Implemented as a single structured Gemini call (full catalog pasted into the prompt) | Real tool-calling: `searchCatalog(filters)`, `getProduct(id)` |
+| LookCritic | ✅ Implemented as a single structured Gemini call + a code-level rule override that always has final say | Real tool-calling: `checkBudget(look, budget)`, `checkAvoidList(look, brief)` — kept as a hybrid, since the code-level check must never become optional |
+| Presenter | ❌ Not yet implemented | Tools: `renderTryOn(photo, products)`, `saveLook(uid, look)` |
 
-- **`src/services/tryOnService.js`** isolates the "virtual try-on" call
-  behind one function, `simulateTryOn()`. Project 2 replaces its body with
-  a real `fetch("/api/try-on", { method: "POST", ... })` call to an
-  Express endpoint that talks to Google's Virtual Try-On API — no
-  component needs to change.
-- **`src/data/products.js`** is a static array today; Project 2 can swap it
-  for a function that fetches from a database or a commerce API (Shopify,
-  Amazon, etc.) and return the same shape of data.
-- **The Login page** (`src/LoginApp.jsx`) currently "creates" and "signs
-  in" accounts entirely in local component state. Project 2 would replace
-  `handleAccountCreated`/`handleLoginSubmit` with real requests to an
-  authentication API — the surrounding UI/state structure stays the same.
-- **`DockerContainer/`** already serves the static build with Apache;
-  Project 2 would add a second container (Node/Express) alongside it,
-  likely behind a reverse proxy.
+None of the implemented agents currently use Gemini's real function-calling
+API — each is a single prompt-in/structured-JSON-out call, with the
+*orchestration* (which step runs next) and the *rule-checking*
+(`checkLookRules()`) both handled by plain application code rather than by
+the model deciding to invoke a tool. That's the gap the "planned upgrade"
+column above is closing.
 
-Intentionally **not** built in Project 1: any backend server, database,
-real authentication, cloud storage, or calls to Google's Virtual Try-On
-API, Shopify, or any other external commerce/AI service.
+### Is each component an API endpoint or an agent tool?
+
+Determined per-component, since not everything in this pipeline is (or
+should be) a callable agent tool:
+
+| Component | Endpoint or tool? | Why |
+|---|---|---|
+| P1 — Photo Analysis | Tool (planned) for StyleAnalyst: `analyzeNewPhotos(uid)` | StyleAnalyst should decide when a photo needs (re-)analyzing, not the frontend |
+| P2 — Photo Check | API endpoint | A synchronous UX gate right after upload, before any agent runs — nothing decides to invoke it |
+| P3 — Virtual Try-On | Tool (planned) for Presenter: `renderTryOn(photo, products)` | Presenter decides when the winning look is ready to render |
+| A1 — Voice Style Request | API endpoint | User-triggered, one-shot, no agent decision involved |
+| A2 — Voice Refinement | API endpoint | Parses the follow-up into structured changes that feed the *next* Orchestrator loop iteration — the loop consumes its output, it isn't called mid-reasoning |
+| StyleAnalyst | Agent | Reasons over a user's photo history to build a profile |
+| LookBuilder | Agent | Reasons over the catalog + Style DNA + request to compose looks |
+| LookCritic | Agent (hybrid) | Judges style fit beyond what code can check, but the code-level rule check runs unconditionally as a safety net regardless of whether the model also calls it as a tool |
+| Presenter | Agent | Will decide when a look is ready to present and render |
+| Orchestrator | Neither | It's the coordinator, invoked through one HTTP endpoint (`POST /api/looks/generate`) |
+
+### Step by step: how the agents interact
+
+1. The frontend has already gathered a signed-in user's photo analyses
+   (via Google Photos or local upload + Gemini) and a parsed voice style
+   request, and calls `POST /api/looks/generate`.
+2. The **Orchestrator** calls **StyleAnalyst** once with the photo
+   analyses. StyleAnalyst returns a Style DNA profile (JSON matching
+   `styleDnaSchema`).
+3. The Orchestrator enters a loop, bounded at 3 iterations:
+   1. **LookBuilder** is called with the Style DNA, the style request,
+      and (after the first round) the previous round's critique. It
+      returns a set of candidate looks built from real product IDs.
+   2. Before LookCritic runs, plain code (`checkLookRules()`) checks
+      each look against budget, category completeness, avoid-words,
+      duplicates and unknown product IDs — the "before-agent callback,"
+      deterministic and model-free.
+   3. **LookCritic** is called with the Style DNA, the request, the
+      looks, and those rule-check results. It returns a critique:
+      `verdict: "pass" | "revise"` plus a list of issues.
+   4. `applyRuleOverride()` — the "after-agent callback" — forces
+      `verdict: "revise"` if any code-level rule failed, even if the
+      model said "pass." This is the one guarantee the whole pipeline is
+      built to prove: a hard rule violation can never be waved through,
+      regardless of what the model claims.
+   5. If the verdict is "pass," the loop ends early. Otherwise,
+      LookBuilder's next prompt includes every issue from the critique,
+      and the loop repeats (up to 3 rounds total).
+4. *(Planned)* **Presenter** will take the final looks and critique,
+   write a stylist note, generate a try-on preview image, and save the
+   result. Until Presenter exists, the Orchestrator saves the result
+   directly to Firestore itself.
+5. The final result — looks, critique, and a full per-iteration agent
+   trace — is returned to the frontend and rendered in the Results panel.
+
+### Visual workflow
+
+```mermaid
+flowchart TD
+    FE["React Frontend"] -->|"POST /api/looks/generate"| ORCH["Orchestrator"]
+    ORCH --> SA["StyleAnalyst<br/>(Gemini call)"]
+    SA -->|"Style DNA"| LB
+
+    subgraph LOOP ["Loop — bounded at 3 iterations"]
+        LB["LookBuilder<br/>(Gemini call)"] -->|"candidate looks"| RULES["checkLookRules()<br/>(code, before-agent callback)"]
+        RULES -->|"ruleCheck results"| LC["LookCritic<br/>(Gemini call)"]
+        LC -->|"critique: pass / revise"| OVERRIDE["applyRuleOverride()<br/>(code, after-agent callback)"]
+        OVERRIDE -->|"revise: issues fed back"| LB
+    end
+
+    OVERRIDE -->|"pass"| PRES["Presenter<br/>(planned, not yet implemented)"]
+    PRES -.->|"stylist note + try-on image"| FS[("Firestore: lookSets")]
+    OVERRIDE -. "today: saved directly, no Presenter yet" .-> FS
+    FS --> FE
+```
+
+### APIs and tools used to build this
+
+- **Gemini API** (`@google/generative-ai` Node SDK) — every structured
+  call: photo analysis, voice parsing, and all three implemented agents.
+- **Google Identity Services** — real "Sign in with Google" (ID token)
+  plus a separate OAuth consent flow for Google Photos access.
+- **Google Photos Picker API** — lets a signed-in user pick photos from
+  their own Google Photos library without granting broad library access.
+- **Firestore** (`@google-cloud/firestore`) — persistence for photo
+  analyses, style requests, generated look sets, and saved looks.
+- **Google Cloud Logging** (`@google-cloud/logging`) — structured logs
+  from both the backend and (relayed through `POST /api/logs`) the
+  frontend, in one shared log stream.
+- **Google Analytics 4** — client-side via `react-ga4`, server-side via
+  the GA4 Measurement Protocol (a direct HTTPS call, since GA4 has no
+  server-side SDK).
+- **Browser MediaRecorder API** — live voice recording in the browser.
+- **Express** — the backend's routing and middleware.
+- **Cloud Run** — single-container deployment (multi-stage Docker build
+  serving both the built frontend and the API from one origin).
+
+
+## What's Not Yet Built
+
+Most of what Project 1's README called "future Project 2 architecture"
+is now real and described above. What's genuinely still missing:
+
+- **Presenter agent** — not yet implemented (see the TODO comment in
+  `backend/agents/orchestrator.js`). Until it exists, the Orchestrator
+  saves the final look set to Firestore directly.
+- **Real tool-calling** — StyleAnalyst, LookBuilder, and LookCritic are
+  each a single structured Gemini call today, not Gemini's function-calling
+  API. The planned tools for each are listed in the **Implementation
+  status** table above.
+- **P3 — Virtual Try-On preview image** — Fitted recommends and assembles
+  complete looks, but does not yet render an AI image of the user wearing
+  them. This is the one piece of the original "virtual try-on" concept not
+  yet connected.
+- **Real commerce catalog** — `backend/data/products.js` (or its
+  equivalent) is still a static mock catalog; a future version could pull
+  from Shopify, Amazon, or another commerce API.
