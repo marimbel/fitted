@@ -5,5 +5,5 @@ dist/
 *.mov
 .env
 wiki-pages/
-fitted1.wiki/
+fitted.wiki/
 *.timestamp-*.mjs
