@@ -29,7 +29,7 @@ export default function RegisterForm({ onAccountCreated, onCancel }) {
   return (
     <div className="auth-card">
       <h2 className="h4">Create Account</h2>
-      <p className="auth-subtext">This is a prototype — nothing is sent to a server.</p>
+      <p className="auth-subtext">Join Fitted to save your favorite looks.</p>
 
       <form onSubmit={handleSubmit} noValidate>
         <div className="mb-3">
