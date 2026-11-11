@@ -2,13 +2,14 @@
   "name": "fitted-backend",
   "private": true,
   "version": "1.0.0",
-  "description": "Fitted Project 2 — Express backend: Google auth verification, Google Photos + Gemini + ADK agent orchestration, Firestore storage. Deployed as a single Cloud Run service (agents run in-process, no separate agents service, per the Project 2 proposal review).",
+  "description": "Fitted Project 2 \u2014 Express backend: Google auth verification, Google Photos + Gemini + ADK agent orchestration, Firestore storage. Deployed as a single Cloud Run service (agents run in-process, no separate agents service, per the Project 2 proposal review).",
   "type": "module",
   "main": "app.js",
   "scripts": {
     "dev": "node --watch app.js",
     "start": "node app.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "embed-products": "node scripts/precomputeProductEmbeddings.js"
   },
   "dependencies": {
     "@google-cloud/firestore": "^7.10.0",

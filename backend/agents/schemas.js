@@ -105,3 +105,27 @@ export const critiqueSchema = {
   },
   required: ["verdict", "issues", "summary"],
 };
+
+// StyleScout's output: given a shortlist of visually-similar catalog
+// products (ranked by cosineSimilarity -- plain code, not the model),
+// the model's job is the *curation* layer on top -- deciding which of
+// those pixel-similar matches actually suit this person's taste and
+// explaining why in plain language, not re-measuring similarity itself.
+export const styleMatchSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    curated: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          productId: { type: SchemaType.STRING },
+          reason: { type: SchemaType.STRING },
+        },
+        required: ["productId", "reason"],
+      },
+    },
+    summary: { type: SchemaType.STRING },
+  },
+  required: ["curated", "summary"],
+};

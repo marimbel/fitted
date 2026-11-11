@@ -9,6 +9,15 @@
  *     ├─ loop( LookBuilder <-> LookCritic )  (bounded at 3 iterations)
  *     └─ Presenter                          (NOT YET IMPLEMENTED — see TODO)
  *
+ * NOTE: a sixth agent, StyleScout (agents/styleScout.js), is NOT part
+ * of this Orchestrator -- it runs independently, invoked directly from
+ * POST /api/style-search, since visual-similarity search ("find more
+ * things that look like this photo") doesn't fit the sequential +
+ * loop shape above. It follows the same code-decides-facts /
+ * model-decides-taste split this file uses (see applyRuleOverride
+ * below): a deterministic cosine-similarity ranking step, then one
+ * Gemini call that curates and explains the top matches.
+ *
  * One Cloud Run service, agents run in-process (per the review
  * feedback) rather than as a separate deployment.
  *

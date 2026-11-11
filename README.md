@@ -251,7 +251,7 @@ backend, and is no longer how Fitted is actually deployed.
 
 ## AI Agent Architecture
 
-Fitted's recommendation flow is built from five named agents, coordinated
+Fitted's recommendation flow is built from six named agents, coordinated
 by one Orchestrator, rather than a single unlabeled Gemini call:
 
 - **Orchestrator** — the top-level agent. Decides what runs next and in
@@ -267,6 +267,11 @@ by one Orchestrator, rather than a single unlabeled Gemini call:
 - **Presenter** — *(planned, not yet implemented — see the TODO comment
   in `backend/agents/orchestrator.js`)* will write a stylist note for the
   winning look, generate a try-on preview image, and save the result.
+- **StyleScout** — *(independent of the Orchestrator above)* given a
+  reference photo, searches the product catalog by visual similarity
+  (Vertex AI multimodal embeddings, not text tags) and has Gemini curate
+  and explain the best matches. See **Visual similarity search: how
+  StyleScout works** below.
 
 ### Implementation status (updated as the rework lands)
 
@@ -277,6 +282,7 @@ by one Orchestrator, rather than a single unlabeled Gemini call:
 | LookBuilder | ✅ Implemented as a single structured Gemini call (full catalog pasted into the prompt) | Real tool-calling: `searchCatalog(filters)`, `getProduct(id)` |
 | LookCritic | ✅ Implemented as a single structured Gemini call + a code-level rule override that always has final say | Real tool-calling: `checkBudget(look, budget)`, `checkAvoidList(look, brief)` — kept as a hybrid, since the code-level check must never become optional |
 | Presenter | ❌ Not yet implemented | Tools: `renderTryOn(photo, products)`, `saveLook(uid, look)` |
+| StyleScout | ✅ Implemented — deterministic visual-similarity ranking (code) + one structured Gemini call to curate | Real tool-calling: `searchByImage(embedding)`, letting the model decide when a visual search is the right move instead of it always being a separate endpoint |
 
 None of the implemented agents currently use Gemini's real function-calling
 API — each is a single prompt-in/structured-JSON-out call, with the
@@ -302,6 +308,7 @@ should be) a callable agent tool:
 | LookCritic | Agent (hybrid) | Judges style fit beyond what code can check, but the code-level rule check runs unconditionally as a safety net regardless of whether the model also calls it as a tool |
 | Presenter | Agent | Will decide when a look is ready to present and render |
 | Orchestrator | Neither | It's the coordinator, invoked through one HTTP endpoint (`POST /api/looks/generate`) |
+| StyleScout | Agent (hybrid) | Reasons over which visually-similar candidates fit, but the similarity ranking itself is a deterministic code step, same hybrid pattern as LookCritic |
 
 ### Step by step: how the agents interact
 
@@ -337,6 +344,48 @@ should be) a callable agent tool:
 5. The final result — looks, critique, and a full per-iteration agent
    trace — is returned to the frontend and rendered in the Results panel.
 
+### Visual similarity search: how StyleScout works
+
+StyleScout (`backend/agents/styleScout.js`) is a separate flow from the
+Orchestrator above, triggered by `POST /api/style-search` instead of
+`POST /api/looks/generate`. It answers a different question — "find me
+more things that look like *this*" — given a reference photo (an
+Inspiration-page photo, a runway look, anything the user uploads), not a
+spoken style request.
+
+1. The reference photo is sent to **Vertex AI's multimodal embeddings**
+   model (`services/embeddingsService.js`), which returns a vector —
+   a list of numbers describing the image's visual features
+   (silhouette, color, texture, pattern), not text labels.
+2. The same model has already embedded every product photo in the
+   catalog (`backend/data/products.js`), either lazily on first use or
+   ahead of time via `npm run embed-products`
+   (`scripts/precomputeProductEmbeddings.js`), which writes
+   `backend/data/productEmbeddings.json` so the catalog isn't re-embedded
+   on every request.
+3. `rankByVisualSimilarity()` — pure code, no model call — ranks the
+   catalog by cosine similarity to the reference photo's embedding and
+   returns the top 5. This is the same "deterministic facts, model
+   decides taste" split `lookRules.js` uses for LookCritic.
+4. Those top 5 candidates (plus the user's Style DNA / style request,
+   if available) are handed to **Gemini**, which curates: of the
+   visually-closest items, which actually suit this person, with a
+   one-sentence reason each. Pixel similarity alone doesn't know about
+   budget, occasion, or personal taste — that's StyleScout's actual
+   "agent" step.
+5. The route returns both: the raw ranked candidates (with similarity
+   scores) and Gemini's curated subset with explanations.
+
+```mermaid
+flowchart LR
+    PHOTO["Reference photo"] -->|"multimodal embedding"| VERTEX["Vertex AI<br/>Multimodal Embeddings"]
+    CATALOG[("Product catalog<br/>(10 items)")] -.->|"embedded once,<br/>cached"| VERTEX
+    VERTEX -->|"query vector"| RANK["rankByVisualSimilarity()<br/>(code, cosine similarity)"]
+    VERTEX -.->|"catalog vectors"| RANK
+    RANK -->|"top 5 candidates"| SCOUT["StyleScout<br/>(Gemini call: curate + explain)"]
+    SCOUT --> RESULT["Curated matches + reasons"]
+```
+
 ### Visual workflow
 
 ```mermaid
@@ -362,6 +411,10 @@ flowchart TD
 
 - **Gemini API** (`@google/generative-ai` Node SDK) — every structured
   call: photo analysis, voice parsing, and all three implemented agents.
+- **Vertex AI Multimodal Embeddings** (`multimodalembedding@001`, called
+  directly via REST + `google-auth-library`) — turns a photo into a
+  vector for StyleScout's visual-similarity search; see **Visual
+  similarity search: how StyleScout works** above.
 - **Google Identity Services** — real "Sign in with Google" (ID token)
   plus a separate OAuth consent flow for Google Photos access.
 - **Google Photos Picker API** — lets a signed-in user pick photos from
@@ -399,3 +452,8 @@ is now real and described above. What's genuinely still missing:
 - **Real commerce catalog** — `backend/data/products.js` (or its
   equivalent) is still a static mock catalog; a future version could pull
   from Shopify, Amazon, or another commerce API.
+- **A real vector index for StyleScout** — at 10 mock products, an
+  in-memory cosine-similarity scan (optionally warmed by
+  `npm run embed-products`) is plenty fast; a larger real catalog would
+  move the same embeddings into Vertex AI Vector Search instead of
+  comparing every vector by hand on each request.

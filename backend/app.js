@@ -10,6 +10,9 @@
  *   /api/photos  - Google Photos Picker + Gemini photo analysis
  *   /api/audio   - audio upload + Gemini voice-request parsing
  *   /api/looks   - run the agent pipeline, save/read recommended looks
+ *   /api/style-search - StyleScout: visual-similarity search against
+ *                  the product catalog (Vertex AI embeddings + Gemini
+ *                  curation), independent of the /api/looks pipeline
  *
  * TODO (Project 2 core workflow, in build order — see the roadmap):
  *   1. Wire up real Google auth verification (middleware/verifyGoogleToken.js)
@@ -29,6 +32,7 @@ import photosRoutes from "./routes/photos.js";
 import audioRoutes from "./routes/audio.js";
 import looksRoutes from "./routes/looks.js";
 import logsRoutes from "./routes/logs.js";
+import styleSearchRoutes from "./routes/styleSearch.js";
 
 // ESM doesn't have __dirname built in the way CommonJS does -- this is
 // the standard way to reconstruct it, needed below to point express at
@@ -52,6 +56,7 @@ app.use("/api/photos", photosRoutes);
 app.use("/api/audio", audioRoutes);
 app.use("/api/looks", looksRoutes);
 app.use("/api/logs", logsRoutes);
+app.use("/api/style-search", styleSearchRoutes);
 
 // Serve the built frontend (frontend/dist) as static files, AFTER the
 // /api routes above so those always win. This only matters for the
