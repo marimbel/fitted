@@ -1,0 +1,305 @@
+/* Agent Architecture page — page-specific styling layered on top of
+   shared.css. Reuses the site's existing tokens (colors, type, spacing)
+   plus the .card-fitted / .step-number / .eyebrow / .divider utilities
+   already established on Home and About, so this page reads as part of
+   the same product rather than a bolted-on "docs" page. */
+
+.architecture-hero {
+  padding: var(--space-xl) 0 var(--space-lg) 0;
+}
+
+.architecture-hero h1 {
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  max-width: 20ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.architecture-hero h1 em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+.architecture-hero-copy {
+  max-width: 48ch;
+  font-size: 1.05rem;
+}
+
+/* ---- "Meet the Team" numbered agent grid ---- */
+.agent-grid {
+  margin-top: var(--space-md);
+}
+
+.agent-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.agent-card:hover {
+  border-color: var(--color-accent);
+}
+
+.agent-card .pill {
+  align-self: flex-start;
+  margin-top: 0.4rem;
+}
+
+/* ---- status pill (Implemented / Planned) ---- */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.4em 0.9em;
+  border-radius: 1px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  border: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.pill::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.pill-live {
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.pill-live::before {
+  background: var(--color-accent);
+}
+
+.pill-planned {
+  color: var(--color-text-secondary);
+  border-style: dashed;
+}
+
+/* ---- pipeline diagram ---- */
+.section-white {
+  background-color: #ffffff;
+}
+
+.flow-figure {
+  margin: var(--space-lg) 0 0 0;
+}
+
+/* On narrow screens the diagram can't shrink below a readable size, so
+   instead of scaling its text down to nothing, this wrapper scrolls
+   horizontally while the page itself never does (the body stays within
+   the viewport width, satisfying the no-horizontal-scroll requirement —
+   only this one inner element scrolls, the same pattern used for a wide
+   table on a small screen). */
+.flow-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0.5rem;
+}
+
+.flow-wrap {
+  position: relative;
+  min-width: 640px;
+}
+
+.flow-figure svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  color: var(--color-text);
+}
+
+.flow-scroll-hint {
+  display: none;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  margin-top: var(--space-xs);
+}
+
+@media (max-width: 700px) {
+  .flow-scroll-hint {
+    display: block;
+  }
+}
+
+.flow-figure .flow-box {
+  pointer-events: all;
+  cursor: default;
+  transition: fill 160ms ease, stroke 160ms ease;
+}
+
+.flow-figure .flow-box:hover {
+  fill: #dce9f6;
+  stroke: #6f93b5;
+}
+
+.flow-figure text {
+  font-family: var(--font-sans);
+  fill: currentColor;
+  pointer-events: none; /* let hover pass through labels to the box beneath */
+}
+
+.flow-figure .serif {
+  font-family: var(--font-serif);
+}
+
+.flow-caption {
+  text-align: center;
+  font-size: 0.85rem;
+  margin-top: var(--space-sm);
+  max-width: 68ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Hover tooltip for the pipeline diagram — explains what each agent does
+   and where it sits in the request flow. Positioned in JS (architecture.js)
+   using the hovered box's own bounding rect, so it tracks correctly no
+   matter how the SVG is scaled on a given screen. */
+.flow-tooltip {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  width: 232px;
+  background: var(--color-dark);
+  color: #fff;
+  padding: 0.9rem 1.05rem;
+  border-radius: 2px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.flow-tooltip.visible {
+  opacity: 1;
+}
+
+.flow-tooltip::after {
+  content: "";
+  position: absolute;
+  left: calc(50% + var(--arrow-shift, 0px));
+  top: 100%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-dark);
+}
+
+.flow-tooltip-title {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #fff;
+  margin-bottom: 0.3rem;
+}
+
+.flow-tooltip-desc {
+  margin: 0;
+  color: #d8d5cd;
+}
+
+/* ---- "Agent or Automation" two-column split ---- */
+.split-card h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.split-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.split-card li {
+  padding: 1.15rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.92rem;
+}
+
+.split-card li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.split-card li b {
+  color: var(--color-text);
+  font-weight: 500;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  display: block;
+  margin-bottom: 0.4rem;
+}
+
+.split-card li .desc {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65em;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.sparkle-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  margin-top: -0.05em;
+}
+
+.sparkle {
+  width: 14px;
+  height: 14px;
+  color: #e8c3c8;
+}
+
+/* ---- "Under the Hood" colophon ---- */
+.colophon {
+  text-align: center;
+  font-size: 0.86rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text);
+  font-weight: 600;
+  line-height: 2.9;
+  max-width: 72ch;
+  margin: var(--space-sm) auto 0 auto;
+}
+
+.colophon-sparkle {
+  width: 13px;
+  height: 13px;
+  vertical-align: -1px;
+  color: var(--color-accent);
+  margin: 0 0.65em;
+}
+
+@media (max-width: 991px) {
+  .split {
+    row-gap: var(--space-lg);
+  }
+}

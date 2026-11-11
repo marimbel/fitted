@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Architecture — Fitted</title>
+  <meta name="description" content="How Fitted's AI styling agents work together to turn a photo and a style request into a finished, rule-checked look." />
+
+  <!-- Favicon / app icon (hanger glyph + Fitted wordmark) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Open Graph tags: control the title/description/image shown when
+       this page is shared as a link (iMessage, Slack, etc.) or added
+       to a phone's home screen, instead of a browser-generated
+       fallback preview. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Agent Architecture — Fitted" />
+  <meta property="og:description" content="How Fitted's AI styling agents work together to turn a photo and a style request into a finished, rule-checked look." />
+  <meta property="og:image" content="%VITE_SITE_URL%/images/icon-512.png" />
+  <meta property="og:url" content="%VITE_SITE_URL%/architecture.html" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <link rel="stylesheet" href="/css/architecture.css" />
+
+  <!-- GA4 (Google Analytics 4) client-side pageview tracking, same
+       property as the React pages (see src/services/analytics.js).
+       Loaded directly with Google's gtag.js since this is a plain
+       static page, not React. Vite replaces %VITE_GA4_MEASUREMENT_ID%
+       with the real value at build time (same mechanism as any other
+       VITE_ env var; see .env / .env.production). -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA4_MEASUREMENT_ID%"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "%VITE_GA4_MEASUREMENT_ID%");
+  </script>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg fitted-navbar sticky-top">
+    <div class="container-fitted">
+      <a class="navbar-brand" href="index.html">Fitted</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#fittedNav" aria-controls="fittedNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="fittedNav">
+        <ul class="navbar-nav align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="app.html">App</a></li>
+          <li class="nav-item"><a class="nav-link" href="architecture.html">Architecture</a></li>
+          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================= HERO ============================= -->
+  <header class="architecture-hero">
+    <div class="container-fitted text-center">
+      <span class="eyebrow">The Intelligence Behind the Look</span>
+      <h1>A styling team, built <em>entirely</em> from AI.</h1>
+      <hr class="divider mx-auto" />
+      <p class="architecture-hero-copy mx-auto">
+        Before a single look reaches you, it's reasoned over by five specialized agents —
+        reading your style, assembling the outfit, and critiquing it the way a real stylist
+        would — all coordinated by one Orchestrator.
+      </p>
+    </div>
+  </header>
+
+  <!-- ============================= MEET THE TEAM ============================= -->
+  <section>
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Meet the Team</span>
+          <h2>Five specialists, one point of view</h2>
+        </div>
+      </div>
+      <div class="row g-4 agent-grid">
+        <div class="col-md-4 col-lg reveal">
+          <div class="card-fitted agent-card h-100">
+            <span class="step-number">01</span>
+            <h3 class="h5">Orchestrator</h3>
+            <p>The creative director — decides which agent speaks next, and when a look is ready.</p>
+            <span class="pill pill-live">Implemented</span>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg reveal">
+          <div class="card-fitted agent-card h-100">
+            <span class="step-number">02</span>
+            <h3 class="h5">StyleAnalyst</h3>
+            <p>Reads your photos like a stylist reads a closet — distilling your color, silhouette, and mood into a Style DNA.</p>
+            <span class="pill pill-live">Implemented</span>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg reveal">
+          <div class="card-fitted agent-card h-100">
+            <span class="step-number">03</span>
+            <h3 class="h5">LookBuilder</h3>
+            <p>Assembles complete, wearable looks from the catalog — built around your Style DNA, not a generic model.</p>
+            <span class="pill pill-live">Implemented</span>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg reveal">
+          <div class="card-fitted agent-card h-100">
+            <span class="step-number">04</span>
+            <h3 class="h5">LookCritic</h3>
+            <p>Your most discerning eye, automated — vets every look for fit, budget, and taste before it's shown to you.</p>
+            <span class="pill pill-live">Implemented</span>
+          </div>
+        </div>
+        <div class="col-md-4 col-lg reveal">
+          <div class="card-fitted agent-card h-100">
+            <span class="step-number">05</span>
+            <h3 class="h5">Presenter</h3>
+            <p>Coming soon: a stylist's note and a preview of the finished look, in your own fitting room.</p>
+            <span class="pill pill-planned">Planned</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= PIPELINE DIAGRAM ============================= -->
+  <section class="section-white">
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Behind the Look</span>
+          <h2>From a photo to a finished recommendation</h2>
+        </div>
+      </div>
+      <figure class="flow-figure reveal">
+        <div class="flow-scroll">
+        <div class="flow-wrap">
+          <svg viewBox="0 0 1100 260" role="img" aria-label="Frontend sends a request to the Orchestrator, which calls StyleAnalyst once, then loops LookBuilder and LookCritic up to three times before handing off to the planned Presenter agent and saving to Firestore.">
+            <defs>
+              <marker id="arrowA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+              </marker>
+            </defs>
+            <g stroke="currentColor" stroke-width="1.4" fill="none">
+              <line x1="60" y1="60" x2="150" y2="60" marker-end="url(#arrowA)" />
+              <line x1="250" y1="60" x2="340" y2="60" marker-end="url(#arrowA)" />
+              <line x1="440" y1="60" x2="500" y2="60" marker-end="url(#arrowA)" />
+              <line x1="500" y1="60" x2="500" y2="110" />
+              <path d="M 560 150 A 40 40 0 1 1 560 190" stroke="#dbb8bd" marker-end="url(#arrowA)" />
+              <line x1="800" y1="150" x2="880" y2="150" marker-end="url(#arrowA)" stroke-dasharray="4 3" />
+              <line x1="980" y1="150" x2="1000" y2="90" marker-end="url(#arrowA)" />
+            </g>
+
+            <g text-anchor="middle" font-size="12">
+              <rect class="flow-box" x="0" y="35" width="60" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="App" data-desc="Your photo and style request come in here — this single call is what kicks off the whole loop." />
+              <text class="serif" x="30" y="64" font-size="13">App</text>
+
+              <rect class="flow-box" x="150" y="35" width="100" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="Orchestrator" data-desc="The creative director. Decides what runs next — calls StyleAnalyst once, then loops LookBuilder and LookCritic until a look is ready to leave the room." />
+              <text class="serif" x="200" y="56">Orchestrator</text>
+              <text x="200" y="72" font-size="9" fill="var(--color-text-secondary)">coordinator</text>
+
+              <rect class="flow-box" x="340" y="35" width="100" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="StyleAnalyst" data-desc="Reads your photo history the way a stylist reads a closet — distilling color, silhouette, and mood into a Style DNA, in one Gemini call." />
+              <text class="serif" x="390" y="56">StyleAnalyst</text>
+              <text x="390" y="72" font-size="9" fill="var(--color-text-secondary)">Gemini call</text>
+
+              <rect x="440" y="105" width="360" height="100" rx="4" fill="none" stroke="currentColor" stroke-dasharray="3 3" />
+              <text x="620" y="124" font-size="10" letter-spacing="0.08em" fill="#cfa3ab">LOOP — UP TO 3 ROUNDS</text>
+
+              <rect class="flow-box" x="460" y="140" width="110" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="LookBuilder" data-desc="Shops the catalog for you — assembling complete, wearable looks built around your Style DNA, not a generic model." />
+              <text class="serif" x="515" y="161">LookBuilder</text>
+              <text x="515" y="177" font-size="9" fill="var(--color-text-secondary)">Gemini call</text>
+
+              <rect class="flow-box" x="650" y="140" width="130" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="LookCritic" data-desc="Your most discerning eye, automated. Pairs real taste with a hard rule check on fit and budget that always has the final say." />
+              <text class="serif" x="715" y="161">LookCritic</text>
+              <text x="715" y="177" font-size="9" fill="var(--color-text-secondary)">Gemini + rule override</text>
+
+              <rect class="flow-box" x="880" y="125" width="100" height="50" rx="3" fill="none" stroke="currentColor" stroke-dasharray="3 3"
+                data-title="Presenter — planned" data-desc="Coming soon: will write a stylist's note and render a preview of the finished look before it reaches your fitting room." />
+              <text class="serif" x="930" y="146">Presenter</text>
+              <text x="930" y="162" font-size="9" fill="var(--color-text-secondary)">note + preview</text>
+
+              <rect class="flow-box" x="1000" y="35" width="90" height="50" rx="3" fill="#fdf5f6" stroke="currentColor"
+                data-title="Firestore" data-desc="Where a finished look set is saved — once the loop above has produced one worth keeping." />
+              <text class="serif" x="1045" y="56">Firestore</text>
+              <text x="1045" y="72" font-size="9" fill="var(--color-text-secondary)">lookSets</text>
+            </g>
+            <text x="840" y="140" text-anchor="middle" font-size="9" fill="#cfa3ab">pass →</text>
+          </svg>
+          <div class="flow-tooltip" id="flowTooltip">
+            <strong class="flow-tooltip-title"></strong>
+            <p class="flow-tooltip-desc"></p>
+          </div>
+        </div>
+        </div>
+        <p class="flow-scroll-hint">Swipe to see the full diagram →</p>
+        <figcaption class="flow-caption">LookBuilder and LookCritic go back and forth up to three times, refining the look each round — but the final word always belongs to a hard rule check, never just the model's opinion. Hover any step above to see what it does.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============================= AGENT OR AUTOMATION ============================= -->
+  <section>
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Agent or Automation</span>
+          <h2>Not everything here thinks for itself</h2>
+        </div>
+      </div>
+      <div class="row g-5 split reveal">
+        <div class="col-lg-6 split-card">
+          <h4>API Endpoints</h4>
+          <ul>
+            <li><b>P2 — Photo Check</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Makes sure your photo is runway-ready before anything else happens</span></li>
+            <li><b>A1 — Voice Style Request</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>The moment you tell Fitted what you're after, in your own words</span></li>
+            <li><b>A2 — Voice Refinement</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Carries what you said into the next round of looks</span></li>
+          </ul>
+        </div>
+        <div class="col-lg-6 split-card">
+          <h4>Agents &amp; Tools</h4>
+          <ul>
+            <li><b>StyleAnalyst</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Studies your photos to learn your style</span></li>
+            <li><b>LookBuilder</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Shops the catalog to put each look together</span></li>
+            <li><b>LookCritic</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Has the final say, pairing taste with a few hard rules that never bend</span></li>
+            <li><b>Presenter</b><span class="desc"><span class="sparkle-badge"><svg class="sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg></span>Will know the exact moment a look is ready to show you</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= UNDER THE HOOD ============================= -->
+  <section class="section-alt">
+    <div class="container-fitted text-center">
+      <span class="eyebrow">Under the Hood</span>
+      <h2>The real tools making it possible</h2>
+      <p class="colophon">
+        Gemini&nbsp;API <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Google&nbsp;Identity&nbsp;Services <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Google&nbsp;Photos&nbsp;Picker <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Firestore <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Cloud&nbsp;Logging <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Google&nbsp;Analytics&nbsp;4 <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> MediaRecorder&nbsp;API <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Express <svg class="colophon-sparkle" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 6.5 3.5 9 10 10-6.5 1-9 3.5-10 10-1-6.5-3.5-9-10-10 6.5-1 9-3.5 10-10Z" fill="currentColor"/></svg> Cloud&nbsp;Run
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================= FOOTER ============================= -->
+  <footer class="fitted-footer">
+    <div class="container-fitted">
+      <div class="row gy-4">
+        <div class="col-md-4">
+          <h5>Fitted</h5>
+          <p class="mb-0" style="color:#c7c3ba;">Fashion, previewed before it's purchased.</p>
+        </div>
+        <div class="col-md-4">
+          <h5 class="h6">Site</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5 class="h6">Product</h5>
+          <ul class="list-unstyled">
+            <li><a href="app.html">Virtual Fitting Room</a></li>
+            <li><a href="architecture.html">Agent Architecture</a></li>
+            <li><a href="login.html">Login</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-meta">&copy; 2026 Fitted.</div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS bundle (handles the navbar collapse toggle) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/architecture.js"></script>
+</body>
+</html>

@@ -22,6 +22,7 @@ export default function Navbar({ activePage }) {
     { label: "About", href: "/about.html", key: "about" },
     { label: "Contact", href: "/contact.html", key: "contact" },
     { label: "App", href: "/app.html", key: "app" },
+    { label: "Architecture", href: "/architecture.html", key: "architecture" },
     { label: "Login", href: "/login.html", key: "login" },
   ];
 
