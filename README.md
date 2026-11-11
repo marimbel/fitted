@@ -221,7 +221,7 @@ gcloud run deploy fitted \
   --source . \
   --region us-central1 \
   --allow-unauthenticated \
-  --set-env-vars GCP_PROJECT_ID=fitted-project2,GOOGLE_OAUTH_CLIENT_ID=<client-id>,GEMINI_API_KEY=<gemini-key>,GEMINI_MODEL=gemini-2.0-flash
+  --set-env-vars GCP_PROJECT_ID=fitted-project2,VERTEX_LOCATION=us-central1,GOOGLE_OAUTH_CLIENT_ID=<client-id>,GEMINI_API_KEY=<gemini-key>,GEMINI_MODEL=gemini-2.0-flash
 ```
 
 (Values for `<client-id>` / `<gemini-key>` are the same ones in
@@ -238,7 +238,15 @@ One-time setup before the first deploy:
      --member="serviceAccount:$(gcloud projects describe fitted-project2 --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
      --role="roles/datastore.user"
    ```
-3. After the first deploy prints a `*.run.app` URL, add that exact URL
+3. Enable Vertex AI (needed for StyleScout's visual-similarity search)
+   and grant the same service account the Vertex AI User role:
+   ```bash
+   gcloud services enable aiplatform.googleapis.com --project fitted-project2
+   gcloud projects add-iam-policy-binding fitted-project2 \
+     --member="serviceAccount:$(gcloud projects describe fitted-project2 --format='value(projectNumber)')-compute@developer.gserviceaccount.com" \
+     --role="roles/aiplatform.user"
+   ```
+4. After the first deploy prints a `*.run.app` URL, add that exact URL
    to the OAuth Client's **Authorized JavaScript origins** in Google
    Cloud Console (Credentials → the Client ID → Authorized JavaScript
    origins → Add URI) — Google sign-in will fail on the live site
