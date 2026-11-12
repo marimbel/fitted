@@ -87,7 +87,7 @@ export default function MyLooksPage({ favoriteIds, onToggleFavorite, selectedPro
           {favoriteProducts.length > 0 && (
             <ProductGrid
               products={favoriteProducts}
-              selectedProductId={selectedProduct?.id ?? null}
+              selectedProductIds={selectedProduct ? [selectedProduct.id] : []}
               favoriteIds={favoriteIds}
               onSelectProduct={onSelectProduct}
               onToggleFavorite={onToggleFavorite}

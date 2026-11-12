@@ -27,6 +27,12 @@ export const PRODUCTS = [
   { id: "p08", name: "Relaxed Linen Pants", category: "Bottoms", price: 88, image: "https://parijanclothing.com/cdn/shop/files/1B92686A-800A-42CC-85AD-1CAA50791E28.jpg?v=1771618234" },
   { id: "p09", name: "Oversized Button-Down", category: "Tops", price: 74, image: "https://evankinori.com/cdn/shop/files/AW23-LINESHEET-071.jpg?v=1697594153&width=700" },
   { id: "p10", name: "Quilted Field Jacket", category: "Outerwear", price: 188, image: "https://media-assets.grailed.com/prd/listing/25585343/d917abfdb9d34524a546b660c4877e92" },
+  { id: "p11", name: "Camp Collar Linen Shirt", category: "Tops", price: 69, image: "https://image.hm.com/assets/hm/47/e7/47e79233def23d027cb085039e9cffb2256e3ca3.jpg?imwidth=1260" },
+  { id: "p12", name: "Shearling-Collar Jacket", category: "Outerwear", price: 228, image: "https://image.hm.com/assets/hm/20/75/2075f052c91cd89ef136e3b82fb96620ee8a7916.jpg?imwidth=1260" },
+  { id: "p13", name: "Floral Wrap Dress", category: "Dresses", price: 118, image: "https://image.hm.com/assets/hm/8f/19/8f193d324141a466ddad5f798b582f20bd2aa6a7.jpg" },
+  { id: "p14", name: "Pleated Wide-Leg Trousers", category: "Bottoms", price: 128, image: "https://media.stories.com/assets/005/c6/c3/c6c3bf52dee93732b3309c4a850fc4f0d6c9c717_xxl-1.jpg" },
+  { id: "p15", name: "Leather Chelsea Boots", category: "Shoes", price: 158, image: "https://media.stories.com/assets/005/e7/cc/e7cc338fa129bc8579d863c9b72e7d54d0f1a505_xxl-1.jpg" },
+  { id: "p16", name: "Canvas Low-Top Sneakers", category: "Shoes", price: 79, image: "https://media.cos.com/assets/001/20/82/20820ea2040ba75569b29a1ee946bb7d2f42e7ca_xxl-1.jpg" },
 ];
 
 export function findProduct(id) {

@@ -42,13 +42,21 @@ import { useBackgroundRemoval } from "../hooks/useBackgroundRemoval.js";
  *   photo         - data URL of the uploaded photo, or null
  *   status        - "idle" | "loading" | "done" (the real FRONT try-on)
  *   result        - { imageDataUrl } | { error } | null, once status is "done"
- *   product       - the selected product (for the result caption), or null
+ *   products      - the selected product(s) (for the result caption), []
+ *                   when none are queued -- can be more than one, see
+ *                   FittingRoomPage.handleTryOn
+ *   stepLabel     - string shown in place of the generic loading caption
+ *                   while multiple queued items are being layered on one
+ *                   at a time, or null/undefined outside of that
  *   uploadControl - a rendered PhotoUploader element
  *   imaginedAngles - { side?: angleState, back?: angleState }, where
  *                    angleState is { status: "loading"|"done", imageDataUrl?, error? }
  *   activeView    - "front" | "side" | "back"
  *   onViewChange  - (view) => void -- FittingRoomPage decides whether
  *                   switching views needs to kick off a new Gemini call
+ *   onProductDrop - (productId) => void -- called when a ProductCard
+ *                   (see ProductCard.jsx's draggable root) is dropped
+ *                   onto the Stage; an alternative to clicking "Select"
  */
 const STAGE_COLORS = [
   { key: "white", label: "White", value: "#ffffff" },
@@ -70,14 +78,17 @@ export default function TryOnPanel({
   photo,
   status,
   result,
-  product,
+  products = [],
+  stepLabel,
   uploadControl,
   imaginedAngles = {},
   activeView = "front",
   onViewChange,
+  onProductDrop,
 }) {
   const [stageColor, setStageColor] = useState(STAGE_COLORS[0].value);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isDragOver, setIsDragOver] = useState(false);
   const stageRef = useRef(null);
 
   const isDarkStage = stageColor === "#292826";
@@ -98,7 +109,7 @@ export default function TryOnPanel({
   // whichever tab is active.
   let view; // { kind: "image" | "loading" | "error" | "empty", src?, isImagined?, caption?, message? }
   if (activeView === "front") {
-    if (frontState === "loading") view = { kind: "loading", caption: "Preparing your look..." };
+    if (frontState === "loading") view = { kind: "loading", caption: stepLabel || "Preparing your look..." };
     else if (frontState === "result") view = { kind: "image", src: result.imageDataUrl, isImagined: false };
     else if (frontState === "error")
       view = { kind: "error", message: result?.error || "Something went wrong generating this look." };
@@ -122,6 +133,13 @@ export default function TryOnPanel({
   // cutout once it's ready, instead of showing nothing while it works.
   const { cutoutUrl } = useBackgroundRemoval(view.kind === "image" ? view.src : null);
   const displaySrc = view.kind === "image" ? cutoutUrl || view.src : null;
+
+  // What the result caption shows below the image once the real front
+  // try-on succeeds: one item's name, or "N items" plus the combined
+  // total when more than one was layered on.
+  const resultCaption =
+    products.length === 1 ? products[0].name : products.length > 1 ? `${products.length} items` : "";
+  const resultTotal = products.reduce((sum, product) => sum + product.price, 0);
 
   // Mouse-driven 3D tilt: converts the cursor's position within the
   // stage into a small rotation, so the image appears to tip toward
@@ -164,10 +182,22 @@ export default function TryOnPanel({
 
       <div
         ref={stageRef}
-        className={`try-on-stage${isDarkStage ? " is-dark" : ""}`}
+        className={`try-on-stage${isDarkStage ? " is-dark" : ""}${isDragOver ? " is-drag-over" : ""}`}
         style={{ backgroundColor: stageColor }}
         onMouseMove={handleMouseMove}
         onMouseLeave={resetTilt}
+        onDragOver={(event) => {
+          event.preventDefault(); // required so onDrop actually fires
+          event.dataTransfer.dropEffect = "copy";
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragOver(false);
+          const productId = event.dataTransfer.getData("text/plain");
+          if (productId) onProductDrop?.(productId);
+        }}
       >
         {view.kind === "loading" && (
           <div className="try-on-loading">
@@ -185,11 +215,17 @@ export default function TryOnPanel({
               className="try-on-stage-image"
               style={tiltStyle}
               src={displaySrc}
-              alt={view.isImagined ? `AI-imagined ${activeView} view` : frontState === "result" ? `You wearing ${product?.name || "this item"}` : "Your uploaded photo"}
+              alt={
+                view.isImagined
+                  ? `AI-imagined ${activeView} view`
+                  : frontState === "result"
+                    ? `You wearing ${resultCaption || "this item"}`
+                    : "Your uploaded photo"
+              }
             />
-            {!view.isImagined && frontState === "result" && product && (
+            {!view.isImagined && frontState === "result" && products.length > 0 && (
               <p className="try-on-result-product">
-                {product.name} — ${product.price}
+                {resultCaption} — ${resultTotal}
               </p>
             )}
           </div>

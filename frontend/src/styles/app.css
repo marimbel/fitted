@@ -142,6 +142,15 @@
   }
 }
 
+/* Shown while a ProductCard is being dragged over the Stage (see
+   TryOnPanel.jsx's onDragOver/onDrop) -- the same "drop it here"
+   affordance a file-upload dropzone would use. */
+.try-on-stage.is-drag-over {
+  border-color: var(--color-accent);
+  border-style: dashed;
+  border-width: 2px;
+}
+
 .try-on-stage-placeholder {
   text-align: center;
   color: var(--color-text-secondary);
@@ -396,8 +405,6 @@
 }
 
 .selected-product {
-  display: flex;
-  gap: var(--space-sm);
   padding: var(--space-sm);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -413,23 +420,41 @@
   text-align: center;
 }
 
-.selected-product-media {
-  width: 84px;
-  height: 104px;
-  flex-shrink: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+/* The try-on QUEUE: one <li> per selected product, instead of a single
+   fixed item -- see SelectedProduct.jsx. */
+.selected-product-list {
+  list-style: none;
+  margin: 0 0 var(--space-sm) 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
-.selected-product-media img {
-  width: 100%;
-  height: 100%;
+.selected-product-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.selected-product-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.selected-product-item img {
+  width: 64px;
+  height: 80px;
+  flex-shrink: 0;
   object-fit: contain;
   background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
-.selected-product-details {
+.selected-product-item-details {
   flex: 1;
   min-width: 0;
 }
@@ -437,7 +462,31 @@
 .selected-product-price {
   color: var(--color-text);
   font-weight: 600;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 0;
+}
+
+.selected-product-remove {
+  align-self: flex-start;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  line-height: 1;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.selected-product-remove:hover {
+  color: #b0523f;
+  border-color: #b0523f;
+}
+
+.selected-product-total {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
 }
 
 .selected-product-hint {
@@ -490,6 +539,11 @@
   display: flex;
   flex-direction: column;
   transition: border-color var(--transition-fast);
+  cursor: grab; /* draggable onto the Fitting Room's Stage -- see ProductCard.jsx */
+}
+
+.product-card:active {
+  cursor: grabbing;
 }
 
 .product-card.is-selected {
@@ -588,6 +642,36 @@
 .btn-sm.btn-fitted {
   padding: 0.5rem 1rem;
   font-size: 0.8rem;
+}
+
+/* "Add to Closet" -- a second, clearly-labeled control for the exact
+   same favorite state the heart icon toggles (see ProductCard.jsx's
+   doc comment): a full-width text button is easier to notice/tap than
+   a small icon alone, especially on mobile. */
+.product-card-closet-btn {
+  width: 100%;
+  margin-top: var(--space-xs);
+  padding: 0.45rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: center;
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.product-card-closet-btn:hover {
+  border-color: var(--color-dark);
+  color: var(--color-dark);
+}
+
+.product-card-closet-btn.is-active {
+  color: #ffffff;
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
 }
 
 .product-grid-empty,

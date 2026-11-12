@@ -49,6 +49,33 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
 
+  // The Fitting Room's try-on QUEUE -- unlike `selectedProduct` above
+  // (a single pointer shared with Shop/My Looks for cross-page
+  // continuity), this can hold more than one product at once, so the
+  // user can layer several items onto the same photo in one "Try It
+  // On" (see FittingRoomPage.handleTryOn, which chains one real
+  // Virtual Try-On call per queued item). Lifted here rather than kept
+  // local to FittingRoomPage for the same reason `photo` is: it's part
+  // of this page's shared, persisted-across-navigation state.
+  const [selectedProducts, setSelectedProducts] = useState([]);
+
+  function handleToggleSelectedProduct(product) {
+    setSelectedProducts((current) => {
+      const alreadyQueued = current.some((item) => item.id === product.id);
+      return alreadyQueued
+        ? current.filter((item) => item.id !== product.id) // already queued -> remove
+        : [...current, product]; // not queued yet -> add
+    });
+    // Keep the single cross-page pointer in sync too, so Shop/My Looks
+    // still reflect "the last thing picked in the Fitting Room" the
+    // same way they already reflect picks made on each other.
+    setSelectedProduct(product);
+  }
+
+  function handleRemoveSelectedProduct(product) {
+    setSelectedProducts((current) => current.filter((item) => item.id !== product.id));
+  }
+
   // Google Photos imports (each one Gemini-analyzed) -- lifted here,
   // not local to either page that touches it, so the dedicated Google
   // Photos tab (GooglePhotosPage.jsx) and the Fitting Room's "Generate
@@ -125,8 +152,9 @@ export default function App() {
               <FittingRoomPage
                 photo={photo}
                 onPhotoSelected={setPhoto}
-                selectedProduct={selectedProduct}
-                onSelectProduct={setSelectedProduct}
+                selectedProducts={selectedProducts}
+                onToggleSelectedProduct={handleToggleSelectedProduct}
+                onRemoveSelectedProduct={handleRemoveSelectedProduct}
                 favoriteIds={favoriteIds}
                 onToggleFavorite={handleToggleFavorite}
                 auth={auth}

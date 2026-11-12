@@ -9,17 +9,25 @@ import ProductCard from "./ProductCard.jsx";
  * just repeats ProductCard once per product and passes each one its props.
  *
  * Props:
- *   products         - array of product objects to display
- *   selectedProductId - id of the currently-selected product (or null)
- *   favoriteIds      - array of favorited product ids
- *   onSelectProduct  - (product) => void
- *   onToggleFavorite - (product) => void
+ *   products          - array of product objects to display
+ *   selectedProductIds - array of currently-selected product ids. Shop and
+ *     My Looks only ever put at most one id in here (single selection,
+ *     shared with the Fitting Room via lifted state); the Fitting Room's
+ *     own grid passes its whole multi-item try-on queue, so more than one
+ *     card can show as selected at once -- ProductGrid/ProductCard don't
+ *     need to know which case they're in, they just highlight whatever
+ *     ids are in the array.
+ *   favoriteIds       - array of favorited product ids
+ *   onSelectProduct   - (product) => void -- called on click/drag-start;
+ *     each page decides whether this REPLACES its single selection or
+ *     TOGGLES membership in a queue, ProductGrid doesn't care.
+ *   onToggleFavorite  - (product) => void
  *   emptyMessageTitle / emptyMessageBody - shown instead of the grid when
  *     `products` is empty (used by the "My Looks" page)
  */
 export default function ProductGrid({
   products,
-  selectedProductId,
+  selectedProductIds,
   favoriteIds,
   onSelectProduct,
   onToggleFavorite,
@@ -41,7 +49,7 @@ export default function ProductGrid({
         <div className="col-6 col-lg-4 col-xl-3" key={product.id}>
           <ProductCard
             product={product}
-            isSelected={product.id === selectedProductId}
+            isSelected={selectedProductIds.includes(product.id)}
             isFavorite={favoriteIds.includes(product.id)}
             onSelect={() => onSelectProduct(product)}
             onToggleFavorite={() => onToggleFavorite(product)}

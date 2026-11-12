@@ -36,7 +36,7 @@ import { PRODUCTS } from "../data/products.js";
 
 // In-memory cache for the catalog's embeddings -- these rarely change
 // (same static mock catalog LookBuilder uses) so there's no reason to
-// re-embed all ten product photos on every request. Cleared only by
+// re-embed all sixteen product photos on every request. Cleared only by
 // restarting the server. scripts/precomputeProductEmbeddings.js can
 // warm this ahead of time by writing data/productEmbeddings.json,
 // which loadCatalogEmbeddings() prefers when present.

@@ -4,7 +4,7 @@
  * One-time (or "whenever the catalog's photos change") convenience
  * script: calls the real Vertex AI embeddings API once per product and
  * writes the results to data/productEmbeddings.json, which
- * agents/styleScout.js reads instead of re-embedding all ten product
+ * agents/styleScout.js reads instead of re-embedding all sixteen product
  * photos on every cold start.
  *
  * Needs real credentials with the Vertex AI API enabled on

@@ -78,8 +78,10 @@ fitted/
 │   │   ├── css/                    # shared.css (design system) + per-page CSS
 │   │   │                           #   (architecture.css, inspiration.css, etc.)
 │   │   ├── js/                     # main.js (shared) + contact.js, inspiration.js
-│   │   └── images/                 # Local placeholder images (hero + products +
-│   │                                #   images/inspiration/ look-book photos)
+│   │   └── images/                 # Local placeholder/hero images (product photos
+│   │                                #   are real retailer-hosted URLs instead -- see
+│   │                                #   src/data/products.js; images/inspiration/
+│   │                                #   holds the look-book photos)
 │   └── src/                         # React source (used by app.html & login.html)
 │       ├── App.jsx                   # Root of the Fitting Room SPA (routing + state)
 │       ├── LoginApp.jsx                # Root of the Login page
@@ -123,11 +125,18 @@ All components live in `src/components/`:
   (Shop / Fitting Room / My Looks / Google Photos), kept conceptually
   separate from Navbar.
 - **ProductCard** — a single product's image, name, category, price,
-  favorite (heart) button, and Select button.
+  favorite (heart) button, Select button, and an "Add to Closet" button.
+  The heart icon and "Add to Closet" are two controls for the exact same
+  favorite state (`favoriteIds`), not separate lists -- clicking either
+  one toggles the other too. The whole card is also HTML5-draggable
+  (`draggable` + `onDragStart`, setting the product id as the drag
+  payload): dragging it onto the Fitting Room's Stage is an alternative
+  to clicking "Select" for adding it to the try-on queue (see TryOnPanel
+  below).
 - **ProductGrid** — lays out a list of products as ProductCards using
   Bootstrap's responsive grid classes; shows an empty-state message when
   the list is empty.
-- **CategoryFilter** — the All / Tops / Outerwear / Dresses / Bottoms pills.
+- **CategoryFilter** — the All / Tops / Outerwear / Dresses / Bottoms / Shoes pills.
 - **PhotoUploader** — a compact control (not its own preview box) that lets
   the user choose a photo from their computer via the FileReader API
   (nothing is uploaded to a server until "Try It On" is clicked); the
@@ -135,10 +144,13 @@ All components live in `src/components/`:
   Google Photos moved to its own **Google Photos** tab (`GooglePhotosPage`,
   below) so the picker's errors and the imported-photo grid have room to
   breathe instead of crowding the Stage toolbar.
-- **SelectedProduct** — shows the currently-selected product and the
-  "Try It On" button, which is disabled with an explanatory hint until the
-  user has both uploaded a photo and signed in with Google (the real
-  Virtual Try-On call requires an authenticated request).
+- **SelectedProduct** — shows the Fitting Room's current try-on QUEUE
+  (every product selected via "Select" or dragged onto the Stage, not
+  just one), each with its own remove button and a running total, plus
+  the "Try It On" (or "Try On N Items") button, which is disabled with
+  an explanatory hint until the user has both uploaded a photo and
+  signed in with Google (the real Virtual Try-On call requires an
+  authenticated request).
 - **TryOnPanel** — the Fitting Room's full-width "Stage": a white (or
   user-selected-color, now including three pastels -- pale pink, pale
   blue, pale yellow) backdrop that shows the uploaded photo, then a
@@ -152,7 +164,14 @@ All components live in `src/components/`:
   "AI-Imagined" badge directly over the image (not just a caption) so it
   can never be mistaken for a real photo -- see the Vertex AI Virtual
   Try-On and Gemini Image Generation entries under **APIs and tools used
-  to build this**.
+  to build this**. The Stage is also the HTML5 drop target for
+  ProductCard's drag-and-drop (`onDragOver`/`onDrop`, with an
+  `is-drag-over` dashed-border state while something is dragged over
+  it) -- an alternative to clicking "Select". When more than one
+  product is queued, "Try It On" chains one real Virtual Try-On call
+  per item, feeding each result back in as the next call's photo, so
+  items visually layer onto the same person one at a time (see
+  `FittingRoomPage.handleTryOn` and the next section).
 - **GoogleSignInButton** — a Fitted-styled "Sign in with Google" button
   that opens a small popup with Google's own official button inside it;
   reused on both the Login page and the Fitting Room, backed by the
@@ -169,7 +188,24 @@ All components live in `src/components/`:
   `MyLooksPage`, and the new `GooglePhotosPage`. This is why selecting a
   product in the Shop page is still selected when you switch to the Fitting
   Room tab, and why a photo imported on the Google Photos tab is available
-  immediately in the Fitting Room.
+  immediately in the Fitting Room. `App.jsx` also owns a second, separate
+  piece of lifted state, `selectedProducts` (an array), used only by the
+  Fitting Room's multi-item try-on queue -- it coexists with the single
+  `selectedProduct` pointer rather than replacing it, so Shop/My Looks'
+  single-selection behavior above is unaffected.
+- **Array state / toggling membership in a list** — `handleToggleProduct`
+  (`FittingRoomPage.jsx`) adds or removes a product from `selectedProducts`
+  by id, the standard React pattern for "is this item in the list" state
+  (`array.some(...)` to check, `[...array, item]` / `array.filter(...)` to
+  update) -- used here for the try-on queue, independently of the
+  `favoriteIds` array that already demonstrated the same pattern for
+  favorites.
+- **Sequential async state in a loop** — `handleTryOn`'s chained
+  Virtual Try-On calls (`FittingRoomPage.jsx`) `await` one `POST
+  /api/try-on` call per queued product inside a `for` loop (deliberately
+  not `Promise.all`, since each call needs the PREVIOUS call's generated
+  image as its input), updating a `tryOnStepLabel` string state between
+  iterations so the Stage can show "Adding X (2 of 3)..." while it works.
 - **Async state / loading states** — `FittingRoomPage.jsx` tracks
   `tryOnStatus` (`"idle" | "loading" | "done"`) around the `await
   requestTryOn(...)` call (one real `POST /api/try-on` call), and
@@ -220,6 +256,12 @@ All components live in `src/components/`:
   try-on, and the Login/Create Account flow** — all implemented as React
   event handlers and state updates (see the React State Demonstrations
   section above).
+- **HTML5 Drag and Drop** (`ProductCard.jsx` + `TryOnPanel.jsx`) —
+  `draggable` + `onDragStart` on each product card (sets the product id
+  as the drag payload via `event.dataTransfer`), and `onDragOver`
+  (calling `event.preventDefault()`, required for `onDrop` to fire) +
+  `onDrop` on the Stage, which reads the id back out and adds that
+  product to the try-on queue -- an alternative to clicking "Select".
 
 ## Running Locally
 
@@ -545,7 +587,7 @@ is now real and described above. What's genuinely still missing:
   looks against) is still a static mock catalog on purpose -- the
   pipeline's rule checks and StyleScout's precomputed embeddings
   currently assume a small, stable, fashion-specific product set.
-- **A real vector index for StyleScout** — at 10 mock products, an
+- **A real vector index for StyleScout** — at 16 mock products, an
   in-memory cosine-similarity scan (optionally warmed by
   `npm run embed-products`) is plenty fast; a larger real catalog would
   move the same embeddings into Vertex AI Vector Search instead of

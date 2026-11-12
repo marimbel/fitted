@@ -23,7 +23,13 @@ import { logEvent, logError } from "../services/logger.js";
  *   1. The original Project 1 flow, restyled as one full-width "Stage"
  *      at the top of the page (TryOnPanel.jsx) instead of a two-column
  *      layout -- the uploaded photo and the real Virtual Try-On result
- *      both display there, with a product picker below it.
+ *      both display there, with a product picker below it. The picker
+ *      is a QUEUE, not a single pick: clicking "Select" (or dragging a
+ *      card onto the Stage) adds/removes a product from
+ *      `selectedProducts`, and "Try It On" chains one real Virtual
+ *      Try-On call per queued item (see handleTryOn below), layering
+ *      each result onto the last so more than one piece can be tried
+ *      on at once.
  *   2. The Project 2 flow: sign in with Google, record a spoken style
  *      request, and (using photos imported from the separate Google
  *      Photos tab -- GooglePhotosPage.jsx) let the agent pipeline
@@ -31,18 +37,26 @@ import { logEvent, logError } from "../services/logger.js";
  *      of one item at a time.
  *
  * Props (all Project 1 state, still lifted to App.jsx):
- *   photo, onPhotoSelected           - the uploaded photo
- *   selectedProduct, onSelectProduct - the product chosen from the grid
- *   favoriteIds, onToggleFavorite    - the user's saved products
- *   photoAnalyses                    - photos imported from the Google
- *                                       Photos tab (GooglePhotosPage.jsx),
- *                                       each already analyzed by Gemini
+ *   photo, onPhotoSelected   - the uploaded photo
+ *   selectedProducts         - the Stage's try-on queue (array of product
+ *                              objects, not just one -- see above)
+ *   onToggleSelectedProduct  - (product) => void, adds/removes a product
+ *                              from the queue; App.jsx also keeps the
+ *                              single cross-page `selectedProduct` pointer
+ *                              (Shop/My Looks) in sync when this is called
+ *   onRemoveSelectedProduct  - (product) => void, removes one queued item
+ *                              (used by the remove button in the queue list)
+ *   favoriteIds, onToggleFavorite - the user's saved products ("My Closet")
+ *   photoAnalyses                 - photos imported from the Google
+ *                                    Photos tab (GooglePhotosPage.jsx),
+ *                                    each already analyzed by Gemini
  */
 export default function FittingRoomPage({
   photo,
   onPhotoSelected,
-  selectedProduct,
-  onSelectProduct,
+  selectedProducts,
+  onToggleSelectedProduct,
+  onRemoveSelectedProduct,
   favoriteIds,
   onToggleFavorite,
   auth,
@@ -53,6 +67,11 @@ export default function FittingRoomPage({
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
   const [tryOnResult, setTryOnResult] = useState(null);
+  // Shown in the Stage's loading state while multiple queued items are
+  // being layered on one at a time (see handleTryOn) -- null outside
+  // of a multi-item chain, where the generic "Preparing your look..."
+  // caption is enough.
+  const [tryOnStepLabel, setTryOnStepLabel] = useState(null);
 
   // Which Stage view is active ("front" | "side" | "back"), and the
   // Gemini-imagined results for side/back (keyed by angle). Side/Back
@@ -79,33 +98,87 @@ export default function FittingRoomPage({
     return PRODUCTS.filter((product) => product.category === activeCategory);
   }, [activeCategory]);
 
-  // Picking a new product clears whatever try-on result is currently
-  // on the Stage -- otherwise the previous item's generated image
-  // would stay up even though it's no longer what's selected below.
-  function handleSelectProduct(product) {
-    onSelectProduct(product);
+  // Queuing/dequeuing a product clears whatever try-on result is
+  // currently on the Stage -- otherwise it would keep showing a result
+  // that no longer matches what's queued.
+  function resetStageResult() {
     setTryOnStatus("idle");
     setTryOnResult(null);
     setActiveStageView("front");
     setImaginedAngles({});
   }
 
+  function handleToggleProduct(product) {
+    onToggleSelectedProduct(product);
+    resetStageResult();
+  }
+
+  function handleRemoveProduct(product) {
+    onRemoveSelectedProduct(product);
+    resetStageResult();
+  }
+
+  // Dropping a ProductCard onto the Stage (see TryOnPanel.jsx's
+  // onProductDrop) is an alternative to clicking "Select" -- the drag
+  // payload is just the product id, so it's resolved back to a real
+  // product object here before queuing it the same way a click would.
+  function handleProductDrop(productId) {
+    const product = PRODUCTS.find((item) => item.id === productId);
+    if (product) handleToggleProduct(product);
+  }
+
+  // Chains one real Virtual Try-On call per queued item: the first
+  // call uses the uploaded photo, and each call after that uses the
+  // PREVIOUS call's generated image as its "photo" input, so each
+  // item layers onto whatever's already on screen instead of
+  // overwriting it. Vertex AI's Virtual Try-On model only ever takes
+  // one photo + one garment per call (see tryOnService.js) -- this is
+  // how "try on more than one item" is built on top of that, at the
+  // cost of one real, billed API call per item instead of one call total.
   async function handleTryOn() {
+    if (selectedProducts.length === 0) return;
+
     setTryOnStatus("loading");
     setActiveStageView("front");
     setImaginedAngles({});
-    try {
-      // Real Vertex AI Virtual Try-On call (see src/services/tryOnService.js
-      // and backend/services/virtualTryOnService.js) -- one real image,
-      // from the one photo the user uploaded.
-      const result = await requestTryOn({ idToken: auth.idToken, photo, product: selectedProduct });
-      setTryOnResult(result);
-      setTryOnStatus("done");
-      trackEvent({ category: "API Request", action: "Called Virtual Try-On API", label: selectedProduct?.name });
-    } catch (err) {
-      setTryOnResult({ success: false, error: err.message });
-      setTryOnStatus("done");
-      logError("try_on_failed", err);
+    setTryOnResult(null);
+
+    let currentPhoto = photo;
+    let finalResult = null;
+
+    for (let i = 0; i < selectedProducts.length; i++) {
+      const product = selectedProducts[i];
+      setTryOnStepLabel(
+        selectedProducts.length > 1
+          ? `Adding ${product.name} (${i + 1} of ${selectedProducts.length})...`
+          : null
+      );
+      try {
+        // Deliberately awaited inside the loop, not run in parallel --
+        // each call needs the PREVIOUS call's output image as its input.
+        finalResult = await requestTryOn({ idToken: auth.idToken, photo: currentPhoto, product });
+      } catch (err) {
+        finalResult = { success: false, error: err.message };
+      }
+      if (!finalResult.success) break; // stop the chain; whatever layered before this stays on screen
+      currentPhoto = finalResult.imageDataUrl;
+    }
+
+    setTryOnStepLabel(null);
+    setTryOnResult(finalResult);
+    setTryOnStatus("done");
+
+    if (finalResult?.success) {
+      trackEvent({
+        category: "API Request",
+        action: "Called Virtual Try-On API",
+        label:
+          selectedProducts.length > 1
+            ? `${selectedProducts.length} items layered`
+            : selectedProducts[0]?.name,
+      });
+    } else {
+      logError("try_on_failed", new Error(finalResult?.error || "unknown error"));
     }
   }
 
@@ -199,19 +272,22 @@ export default function FittingRoomPage({
         photo={photo}
         status={tryOnStatus}
         result={tryOnResult}
-        product={selectedProduct}
+        products={selectedProducts}
+        stepLabel={tryOnStepLabel}
         imaginedAngles={imaginedAngles}
         activeView={activeStageView}
         onViewChange={handleStageViewChange}
+        onProductDrop={handleProductDrop}
         uploadControl={<PhotoUploader photo={photo} onPhotoSelected={onPhotoSelected} />}
       />
 
       <div className="fitting-room-below-stage">
         <SelectedProduct
-          product={selectedProduct}
+          products={selectedProducts}
           hasPhoto={Boolean(photo)}
           isSignedIn={auth.isSignedIn}
           onTryOn={handleTryOn}
+          onRemove={handleRemoveProduct}
         />
       </div>
 
@@ -220,9 +296,9 @@ export default function FittingRoomPage({
 
         <ProductGrid
           products={filteredProducts}
-          selectedProductId={selectedProduct?.id ?? null}
+          selectedProductIds={selectedProducts.map((product) => product.id)}
           favoriteIds={favoriteIds}
-          onSelectProduct={handleSelectProduct}
+          onSelectProduct={handleToggleProduct}
           onToggleFavorite={onToggleFavorite}
           emptyMessageTitle="No products in this category yet."
           emptyMessageBody="Try selecting a different filter above."

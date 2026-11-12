@@ -64,7 +64,7 @@ export default function ShopPage({ products, status, error, selectedProduct, onS
 
           <ProductGrid
             products={filteredProducts}
-            selectedProductId={selectedProduct?.id ?? null}
+            selectedProductIds={selectedProduct ? [selectedProduct.id] : []}
             favoriteIds={favoriteIds}
             onSelectProduct={onSelectProduct}
             onToggleFavorite={onToggleFavorite}

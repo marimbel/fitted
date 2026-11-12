@@ -64,8 +64,18 @@ body.inspiration-page .fitted-navbar .navbar-toggler {
    ============================================================ */
 .photo-tile {
   position: relative;
-  display: flex;
-  align-items: flex-end;
+}
+
+/* The image must fill the tile edge-to-edge regardless of its own
+   aspect ratio (object-fit: cover, set on .img-zoom img in shared.css,
+   handles the cropping). Positioning it absolutely -- rather than
+   relying on flexbox to stretch it -- avoids a flexbox quirk where a
+   replaced element (an <img>) inside a flex container sizes itself
+   from its own intrinsic ratio instead of the width/height percentages
+   set on it, leaving a gap on one side. */
+.photo-tile img {
+  position: absolute;
+  inset: 0;
 }
 
 .photo-tile::after {
@@ -77,7 +87,10 @@ body.inspiration-page .fitted-navbar .navbar-toggler {
 }
 
 .photo-tile-label {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 2;
   padding: var(--space-sm) var(--space-md);
   font-family: var(--font-serif);

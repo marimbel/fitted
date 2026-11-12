@@ -9,12 +9,15 @@
  * API call (e.g. a Shopify Storefront query) without changing any of the
  * components that consume it.
  *
- * Each product's `image` path points at a local SVG placeholder under
- * /images/products/ so nothing here depends on an external URL that
- * could break.
+ * Each product's `image` is a real photo URL hosted on the retailer's
+ * own site/CDN (found via that product's real listing page), not a
+ * local placeholder -- so, unlike most of this mock data, these URLs
+ * are external and could in principle go stale or change if a retailer
+ * reorganizes their site. Swap any `image` value here for a local file
+ * under /public/images/products/ if that ever becomes a problem.
  */
 // Product catalog used by the shop and fitting room.
-export const CATEGORIES = ["All", "Tops", "Outerwear", "Dresses", "Bottoms"];
+export const CATEGORIES = ["All", "Tops", "Outerwear", "Dresses", "Bottoms", "Shoes"];
 
 export const PRODUCTS = [
   {
@@ -86,5 +89,47 @@ export const PRODUCTS = [
     category: "Outerwear",
     price: 188,
     image: "https://media-assets.grailed.com/prd/listing/25585343/d917abfdb9d34524a546b660c4877e92",
+  },
+  {
+    id: "p11",
+    name: "Camp Collar Linen Shirt",
+    category: "Tops",
+    price: 69,
+    image: "https://image.hm.com/assets/hm/47/e7/47e79233def23d027cb085039e9cffb2256e3ca3.jpg?imwidth=1260",
+  },
+  {
+    id: "p12",
+    name: "Shearling-Collar Jacket",
+    category: "Outerwear",
+    price: 228,
+    image: "https://image.hm.com/assets/hm/20/75/2075f052c91cd89ef136e3b82fb96620ee8a7916.jpg?imwidth=1260",
+  },
+  {
+    id: "p13",
+    name: "Floral Wrap Dress",
+    category: "Dresses",
+    price: 118,
+    image: "https://image.hm.com/assets/hm/8f/19/8f193d324141a466ddad5f798b582f20bd2aa6a7.jpg",
+  },
+  {
+    id: "p14",
+    name: "Pleated Wide-Leg Trousers",
+    category: "Bottoms",
+    price: 128,
+    image: "https://media.stories.com/assets/005/c6/c3/c6c3bf52dee93732b3309c4a850fc4f0d6c9c717_xxl-1.jpg",
+  },
+  {
+    id: "p15",
+    name: "Leather Chelsea Boots",
+    category: "Shoes",
+    price: 158,
+    image: "https://media.stories.com/assets/005/e7/cc/e7cc338fa129bc8579d863c9b72e7d54d0f1a505_xxl-1.jpg",
+  },
+  {
+    id: "p16",
+    name: "Canvas Low-Top Sneakers",
+    category: "Shoes",
+    price: 79,
+    image: "https://media.cos.com/assets/001/20/82/20820ea2040ba75569b29a1ee946bb7d2f42e7ca_xxl-1.jpg",
   },
 ];
