@@ -8,7 +8,7 @@ import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
 import { CATEGORIES, PRODUCTS } from "../data/products.js";
-import { requestMultiAngleTryOn } from "../services/tryOnService.js";
+import { requestTryOn } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
 import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
@@ -20,13 +20,14 @@ import { logEvent, logError } from "../services/logger.js";
  *
  * The centerpiece of the App. Two things live here now:
  *
- *   1. The original Project 1 flow (two-column layout: photo + product
- *      picker on the left/right, simulated single-item try-on) —
- *      unchanged below.
- *   2. The new Project 2 flow: sign in with Google, pull in a photo
- *      from Google Photos and/or record a spoken style request, then
- *      let the ADK-style agent pipeline (backend/agents/stylistPipeline.js)
- *      recommend whole looks instead of one item at a time.
+ *   1. The original Project 1 flow, restyled as one full-width "Stage"
+ *      at the top of the page (TryOnPanel.jsx) instead of a two-column
+ *      layout -- the uploaded photo and the real Virtual Try-On result
+ *      both display there, with a product picker below it.
+ *   2. The Project 2 flow: sign in with Google, pull in a photo from
+ *      Google Photos and/or record a spoken style request, then let
+ *      the agent pipeline (backend/agents/orchestrator.js) recommend
+ *      whole looks instead of one item at a time.
  *
  * Props (all Project 1 state, still lifted to App.jsx):
  *   photo, onPhotoSelected           - the uploaded photo
@@ -44,17 +45,9 @@ export default function FittingRoomPage({
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
-  // Optional extra angle photos -- side/back are NOT lifted to App.jsx
-  // like `photo` (the front photo) is, because nothing outside this
-  // page needs them (unlike `photo`, which Google Photos import and
-  // StyleAnalyst also touch). See PhotoUploader.jsx's doc comment for
-  // why a real multi-angle result needs a real photo per angle.
-  const [sidePhoto, setSidePhoto] = useState(null);
-  const [backPhoto, setBackPhoto] = useState(null);
-
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
-  const [tryOnAngles, setTryOnAngles] = useState([]);
+  const [tryOnResult, setTryOnResult] = useState(null);
 
   // --- Project 2: Photos import + voice style request. `auth` itself is
   // now a prop (lifted up to App.jsx) so My Looks can read back what's
@@ -73,22 +66,27 @@ export default function FittingRoomPage({
     return PRODUCTS.filter((product) => product.category === activeCategory);
   }, [activeCategory]);
 
+  // Picking a new product clears whatever try-on result is currently
+  // on the Stage -- otherwise the previous item's generated image
+  // would stay up even though it's no longer what's selected below.
+  function handleSelectProduct(product) {
+    onSelectProduct(product);
+    setTryOnStatus("idle");
+    setTryOnResult(null);
+  }
+
   async function handleTryOn() {
     setTryOnStatus("loading");
     try {
       // Real Vertex AI Virtual Try-On call (see src/services/tryOnService.js
-      // and backend/services/virtualTryOnService.js) -- one call per angle
-      // photo supplied (front always, side/back only if uploaded).
-      const result = await requestMultiAngleTryOn({
-        idToken: auth.idToken,
-        photos: { front: photo, side: sidePhoto, back: backPhoto },
-        product: selectedProduct,
-      });
-      setTryOnAngles(result.angles);
+      // and backend/services/virtualTryOnService.js) -- one real image,
+      // from the one photo the user uploaded.
+      const result = await requestTryOn({ idToken: auth.idToken, photo, product: selectedProduct });
+      setTryOnResult(result);
       setTryOnStatus("done");
       trackEvent({ category: "API Request", action: "Called Virtual Try-On API", label: selectedProduct?.name });
     } catch (err) {
-      setTryOnAngles([{ key: "front", label: "Front", error: err.message }]);
+      setTryOnResult({ success: false, error: err.message });
       setTryOnStatus("done");
       logError("try_on_failed", err);
     }
@@ -162,44 +160,45 @@ export default function FittingRoomPage({
         <p>Find something you love. See how it fits your style.</p>
       </div>
 
-      <div className="fitting-room-grid">
-        {/* LEFT SIDE: photo + selection + try-on result */}
-        <div className="fitting-room-left">
+      {/* The Stage: full width, at the top -- the uploaded photo and the
+          real Virtual Try-On result both display here (TryOnPanel.jsx),
+          on a backdrop whose color is a swatch picker away. */}
+      <TryOnPanel
+        photo={photo}
+        status={tryOnStatus}
+        result={tryOnResult}
+        product={selectedProduct}
+        uploadControl={
           <PhotoUploader
             photo={photo}
             onPhotoSelected={onPhotoSelected}
             onImportFromGooglePhotos={auth.isSignedIn ? handleImportFromGooglePhotos : undefined}
             googlePhotosStatus={photosPicker.status}
-            sidePhoto={sidePhoto}
-            onSidePhotoSelected={setSidePhoto}
-            backPhoto={backPhoto}
-            onBackPhotoSelected={setBackPhoto}
           />
+        }
+      />
 
-          <SelectedProduct
-            product={selectedProduct}
-            hasPhoto={Boolean(photo)}
-            isSignedIn={auth.isSignedIn}
-            onTryOn={handleTryOn}
-          />
+      <div className="fitting-room-below-stage">
+        <SelectedProduct
+          product={selectedProduct}
+          hasPhoto={Boolean(photo)}
+          isSignedIn={auth.isSignedIn}
+          onTryOn={handleTryOn}
+        />
+      </div>
 
-          <TryOnPanel status={tryOnStatus} product={selectedProduct} angles={tryOnAngles} />
-        </div>
+      <div className="fitting-room-shop">
+        <CategoryFilter categories={CATEGORIES} activeCategory={activeCategory} onChange={setActiveCategory} />
 
-        {/* RIGHT SIDE: product discovery */}
-        <div className="fitting-room-right">
-          <CategoryFilter categories={CATEGORIES} activeCategory={activeCategory} onChange={setActiveCategory} />
-
-          <ProductGrid
-            products={filteredProducts}
-            selectedProductId={selectedProduct?.id ?? null}
-            favoriteIds={favoriteIds}
-            onSelectProduct={onSelectProduct}
-            onToggleFavorite={onToggleFavorite}
-            emptyMessageTitle="No products in this category yet."
-            emptyMessageBody="Try selecting a different filter above."
-          />
-        </div>
+        <ProductGrid
+          products={filteredProducts}
+          selectedProductId={selectedProduct?.id ?? null}
+          favoriteIds={favoriteIds}
+          onSelectProduct={handleSelectProduct}
+          onToggleFavorite={onToggleFavorite}
+          emptyMessageTitle="No products in this category yet."
+          emptyMessageBody="Try selecting a different filter above."
+        />
       </div>
 
       {/* Project 2: AI style recommendations, built on top of the Project 1

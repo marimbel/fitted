@@ -123,21 +123,25 @@ All components live in `src/components/`:
   Bootstrap's responsive grid classes; shows an empty-state message when
   the list is empty.
 - **CategoryFilter** — the All / Tops / Outerwear / Dresses / Bottoms pills.
-- **PhotoUploader** — lets the user choose a main photo from their computer
-  and previews it with the FileReader API (nothing is uploaded to a server
-  until "Try It On" is clicked). Also renders two optional angle slots
-  ("Add Side" / "Add Back") so the Fitting Room can request a genuine
-  side and back try-on image, not just a front one.
+- **PhotoUploader** — a compact control (not its own preview box) that lets
+  the user choose a photo from their computer via the FileReader API
+  (nothing is uploaded to a server until "Try It On" is clicked), or import
+  one from Google Photos; the actual preview renders inside TryOnPanel's
+  Stage below.
 - **SelectedProduct** — shows the currently-selected product and the
   "Try It On" button, which is disabled with an explanatory hint until the
   user has both uploaded a photo and signed in with Google (the real
   Virtual Try-On call requires an authenticated request).
-- **TryOnPanel** — a white (or user-selected-color) "stage" that shows the
-  loading state and then the real generated try-on image for whichever
-  angle tab (Front / Side / Back) is active.
-- **GoogleSignInButton** — wraps the Google Identity Services button;
-  reused on both the Login page and the Fitting Room's AI
-  recommendations/try-on flow, backed by the shared `useGoogleAuth` hook.
+- **TryOnPanel** — the Fitting Room's full-width "Stage": a white (or
+  user-selected-color) backdrop that shows the uploaded photo, then a
+  loading state, then the real generated try-on image, with a subtle
+  mouse-driven 3D tilt on whichever image is showing (a CSS effect on
+  one real photo, not a second camera angle -- see the Vertex AI
+  Virtual Try-On entry under **APIs and tools used to build this**).
+- **GoogleSignInButton** — a Fitted-styled "Sign in with Google" button
+  that opens a small popup with Google's own official button inside it;
+  reused on both the Login page and the Fitting Room, backed by the
+  shared `useGoogleAuth` hook.
 - **FavoritesButton** — the reusable heart-icon toggle used inside
   ProductCard.
 - **LoginForm** / **RegisterForm** — the Login page's two forms.
@@ -151,9 +155,8 @@ All components live in `src/components/`:
   the Fitting Room tab.
 - **Async state / loading states** — `FittingRoomPage.jsx` tracks
   `tryOnStatus` (`"idle" | "loading" | "done"`) around the `await
-  requestMultiAngleTryOn(...)` call (one real `POST /api/try-on` per
-  supplied angle photo), and `TryOnPanel.jsx` renders a different UI for
-  each value.
+  requestTryOn(...)` call (one real `POST /api/try-on` call), and
+  `TryOnPanel.jsx` renders a different UI for each value.
 - **Persisted state via a side effect** — `useGoogleAuth.js` restores a
   saved Google session from `localStorage` in a mount-only `useEffect`,
   and a second `useEffect` (watching `[idToken, profile, accessToken]`)
@@ -454,11 +457,11 @@ flowchart TD
   of the user wearing a selected product (`POST /api/try-on`,
   `backend/services/virtualTryOnService.js`). The model takes a person
   photo and a garment photo and returns ONE image following whatever
-  pose is already in that photo -- it has no "angle" parameter -- so a
-  genuine front/side/back result is one real call per angle-photo the
-  user supplies (the Fitting Room's photo uploader has optional side/
-  back slots for exactly this; see `frontend/src/services/
-  tryOnService.js`).
+  pose is already in that photo -- it has no "angle" parameter, so
+  there's no API that can generate a genuine second angle (or a real
+  3D model) from one photo. The Fitting Room's Stage (TryOnPanel.jsx)
+  is honest about that: it shows this one real image with a mouse-
+  driven CSS tilt for presentation, not a fake rotation.
 - **Google Identity Services** — real "Sign in with Google" (ID token)
   plus a separate OAuth consent flow for Google Photos access.
 - **Google Photos Picker API** — lets a signed-in user pick photos from
