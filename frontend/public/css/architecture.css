@@ -165,13 +165,19 @@
 /* Hover tooltip for the pipeline diagram — explains what each agent does
    and where it sits in the request flow. Positioned in JS (architecture.js)
    using the hovered box's own bounding rect, so it tracks correctly no
-   matter how the SVG is scaled on a given screen. */
+   matter how the SVG is scaled on a given screen.
+   position: fixed (viewport coordinates) because the tooltip is moved to
+   <body> by architecture.js, outside .flow-scroll, whose overflow-x: auto
+   would otherwise clip it. */
 .flow-tooltip {
-  position: absolute;
-  z-index: 20;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1080; /* above the Bootstrap navbar */
   pointer-events: none;
   transform: translate(-50%, calc(-100% - 12px));
   width: 232px;
+  max-width: calc(100vw - 24px);
   background: var(--color-dark);
   color: #fff;
   padding: 0.9rem 1.05rem;
@@ -195,6 +201,19 @@
   transform: translateX(-50%);
   border: 6px solid transparent;
   border-top-color: var(--color-dark);
+}
+
+/* Flipped variant: shown under the node when there isn't room above
+   (e.g. the diagram is near the top of the screen). */
+.flow-tooltip.below {
+  transform: translate(-50%, 12px);
+}
+
+.flow-tooltip.below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--color-dark);
 }
 
 .flow-tooltip-title {
