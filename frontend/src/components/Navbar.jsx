@@ -5,9 +5,10 @@
  * it can be rendered at the top of both React pages (App and Login).
  *
  * This is intentionally plain HTML anchor tags (<a href="...">), not
- * React Router <Link> elements — Home/About/Contact/App/Login are
- * separate .html documents (see vite.config.js), so navigating between
- * them is a normal full page load, not a client-side route change.
+ * React Router <Link> elements — Home/About/Try Fitted/Architecture/
+ * Login/Contact are separate .html documents (see vite.config.js), so
+ * navigating between them is a normal full page load, not a
+ * client-side route change.
  *
  * The mobile hamburger toggle is handled by Bootstrap's JS bundle (loaded
  * once via a <script> tag in app.html / login.html) reading the
@@ -20,10 +21,10 @@ export default function Navbar({ activePage }) {
   const links = [
     { label: "Home", href: "/index.html", key: "home" },
     { label: "About", href: "/about.html", key: "about" },
-    { label: "Contact", href: "/contact.html", key: "contact" },
-    { label: "App", href: "/app.html", key: "app" },
+    { label: "Try Fitted", href: "/app.html", key: "app" },
     { label: "Architecture", href: "/architecture.html", key: "architecture" },
     { label: "Login", href: "/login.html", key: "login" },
+    { label: "Contact", href: "/contact.html", key: "contact" },
   ];
 
   return (
