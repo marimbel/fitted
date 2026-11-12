@@ -12,7 +12,11 @@ import { apiFetch } from "../services/apiClient.js";
  *   1. Project 1's favorited single products — `favoriteIds` is just an
  *      array of product id strings (lifted state, owned by App.jsx),
  *      so this page filters the full catalog down to the matching
- *      products every render. Unchanged from Project 1.
+ *      products every render. A favorite can now come from EITHER
+ *      catalog -- the local data/products.js (Fitting Room) or the
+ *      live Mock Shop API (Shop page, see App.jsx) -- so both are
+ *      combined before filtering by id, otherwise a Mock Shop product
+ *      favorited from Shop would silently vanish here.
  *   2. Project 2's saved AI-generated looks — these are persisted in
  *      Firestore (users/{uid}/savedLooks) rather than client state, so
  *      they survive a page refresh and are the same for the same
@@ -20,8 +24,9 @@ import { apiFetch } from "../services/apiClient.js";
  *      FittingRoomPage uses (lifted to App.jsx), so this page reads
  *      back looks saved under that same sign-in.
  */
-export default function MyLooksPage({ favoriteIds, onToggleFavorite, selectedProduct, onSelectProduct, auth }) {
-  const favoriteProducts = PRODUCTS.filter((product) => favoriteIds.includes(product.id));
+export default function MyLooksPage({ favoriteIds, onToggleFavorite, selectedProduct, onSelectProduct, auth, shopProducts }) {
+  const allProducts = [...PRODUCTS, ...shopProducts];
+  const favoriteProducts = allProducts.filter((product) => favoriteIds.includes(product.id));
 
   const [savedLooks, setSavedLooks] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | loading | done | error

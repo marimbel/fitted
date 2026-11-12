@@ -13,6 +13,9 @@
  *   /api/style-search - StyleScout: visual-similarity search against
  *                  the product catalog (Vertex AI embeddings + Gemini
  *                  curation), independent of the /api/looks pipeline
+ *   /api/shop    - the standalone Shop page's catalog, fetched live
+ *                  from Shopify's Mock Shop (a real external commerce
+ *                  API) instead of data/products.js
  *
  * TODO (Project 2 core workflow, in build order — see the roadmap):
  *   1. Wire up real Google auth verification (middleware/verifyGoogleToken.js)
@@ -33,6 +36,7 @@ import audioRoutes from "./routes/audio.js";
 import looksRoutes from "./routes/looks.js";
 import logsRoutes from "./routes/logs.js";
 import styleSearchRoutes from "./routes/styleSearch.js";
+import shopRoutes from "./routes/shop.js";
 
 // ESM doesn't have __dirname built in the way CommonJS does -- this is
 // the standard way to reconstruct it, needed below to point express at
@@ -57,6 +61,7 @@ app.use("/api/audio", audioRoutes);
 app.use("/api/looks", looksRoutes);
 app.use("/api/logs", logsRoutes);
 app.use("/api/style-search", styleSearchRoutes);
+app.use("/api/shop", shopRoutes);
 
 // Serve the built frontend (frontend/dist) as static files, AFTER the
 // /api routes above so those always win. This only matters for the

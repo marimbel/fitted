@@ -427,6 +427,13 @@ flowchart TD
   plus a separate OAuth consent flow for Google Photos access.
 - **Google Photos Picker API** — lets a signed-in user pick photos from
   their own Google Photos library without granting broad library access.
+- **Shopify Mock Shop (Storefront GraphQL API)** — a real, live external
+  commerce API (`https://mock.shop/api`, no business account or API key
+  required) that powers the standalone **Shop** page's catalog
+  (`GET /api/shop/products`, `backend/services/mockShopService.js`).
+  Kept separate from `data/products.js`, which the agent pipeline
+  (LookBuilder/LookCritic/StyleScout) still validates against -- Mock
+  Shop's own catalog is Shopify's generic demo store, not fashion items.
 - **Firestore** (`@google-cloud/firestore`) — persistence for photo
   analyses, style requests, generated look sets, and saved looks.
 - **Google Cloud Logging** (`@google-cloud/logging`) — structured logs
@@ -457,9 +464,13 @@ is now real and described above. What's genuinely still missing:
   complete looks, but does not yet render an AI image of the user wearing
   them. This is the one piece of the original "virtual try-on" concept not
   yet connected.
-- **Real commerce catalog** — `backend/data/products.js` (or its
-  equivalent) is still a static mock catalog; a future version could pull
-  from Shopify, Amazon, or another commerce API.
+- **Real commerce catalog for the Fitting Room** — the standalone
+  **Shop** page now pulls live from Shopify's Mock Shop (see **APIs and
+  tools used to build this** above). `backend/data/products.js` (the
+  Fitting Room's curated catalog, which the agent pipeline validates
+  looks against) is still a static mock catalog on purpose -- the
+  pipeline's rule checks and StyleScout's precomputed embeddings
+  currently assume a small, stable, fashion-specific product set.
 - **A real vector index for StyleScout** — at 10 mock products, an
   in-memory cosine-similarity scan (optionally warmed by
   `npm run embed-products`) is plenty fast; a larger real catalog would

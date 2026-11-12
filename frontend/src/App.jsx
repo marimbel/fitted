@@ -7,6 +7,7 @@ import ShopPage from "./pages/ShopPage.jsx";
 import MyLooksPage from "./pages/MyLooksPage.jsx";
 import { useGoogleAuth } from "./hooks/useGoogleAuth.js";
 import { trackPageview, trackEvent } from "./services/analytics.js";
+import { apiFetch } from "./services/apiClient.js";
 
 // HashRouter navigation (e.g. #/shop) never triggers a real browser page
 // load, so GA4 can't see those "page" changes on its own -- this small
@@ -46,6 +47,36 @@ export default function App() {
   const [photo, setPhoto] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
+
+  // Project 2: the Shop page's catalog, fetched once here (not inside
+  // ShopPage itself) from a REAL external commerce API -- Shopify's
+  // Mock Shop (see backend/services/mockShopService.js) -- and lifted
+  // up for the same reason `auth` is: My Looks needs to resolve a
+  // favorited Mock Shop product by id too, so it can't only know about
+  // the local data/products.js catalog the Fitting Room still uses.
+  const [shopProducts, setShopProducts] = useState([]);
+  const [shopStatus, setShopStatus] = useState("loading"); // loading | done | error
+  const [shopError, setShopError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch("/api/shop/products")
+      .then(({ products }) => {
+        if (!cancelled) {
+          setShopProducts(products);
+          setShopStatus("done");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setShopError(err.message);
+          setShopStatus("error");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Project 2: one Google sign-in shared by every page that needs it —
   // calling useGoogleAuth() here once (instead of separately inside
@@ -94,6 +125,9 @@ export default function App() {
             path="/shop"
             element={
               <ShopPage
+                products={shopProducts}
+                status={shopStatus}
+                error={shopError}
                 selectedProduct={selectedProduct}
                 onSelectProduct={setSelectedProduct}
                 favoriteIds={favoriteIds}
@@ -110,6 +144,7 @@ export default function App() {
                 selectedProduct={selectedProduct}
                 onSelectProduct={setSelectedProduct}
                 auth={auth}
+                shopProducts={shopProducts}
               />
             }
           />
