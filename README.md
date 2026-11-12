@@ -12,8 +12,9 @@ spoken style request, and asks Fitted for look recommendations. Behind
 that request, a team of agents (described below, under
 **AI Agent Architecture**) analyzes the photos, builds candidate
 outfits from the product catalog, and critiques them against both
-hard rules and style judgment before returning a result. The one piece
-still mocked is the virtual try-on preview image itself (P3) — see
+hard rules and style judgment before returning a result. The user can
+then try any look on for real with Vertex AI's Virtual Try-On model.
+What's still mocked is which agent decides to call it -- see
 **What's Not Yet Built**.
 
 ## Project Description
@@ -29,7 +30,8 @@ rather than a generic SaaS dashboard.
 
 ## Technologies
 
-- **HTML5 / CSS3 / vanilla JavaScript** — Home, About, and Contact pages
+- **HTML5 / CSS3 / vanilla JavaScript** — Home, About, Contact,
+  Architecture, and Inspiration pages
 - **Bootstrap 5** (via CDN) — responsive grid, navbar collapse, form styling
 - **React 18** — the App (Virtual Fitting Room) and Login pages
 - **React Router** (`HashRouter`) — client-side navigation inside the App SPA
@@ -62,14 +64,18 @@ fitted/
 │   ├── index.html              # Home (static HTML/CSS/JS)
 │   ├── about.html               # About (static HTML/CSS/JS)
 │   ├── contact.html              # Contact (static HTML/CSS/JS)
+│   ├── architecture.html          # Architecture (static HTML/CSS/JS)
+│   ├── inspiration.html            # Inspiration / Look Book (static HTML/CSS/JS)
 │   ├── app.html                   # Mounts the React "Virtual Fitting Room" SPA
 │   ├── login.html                  # Mounts the React Login page
 │   ├── vite.config.js              # Multi-page build configuration
 │   ├── package.json
 │   ├── public/                     # Static assets, copied as-is by Vite
 │   │   ├── css/                    # shared.css (design system) + per-page CSS
-│   │   ├── js/                     # main.js (shared) + contact.js
-│   │   └── images/                 # Local SVG placeholder images (hero + products)
+│   │   │                           #   (architecture.css, inspiration.css, etc.)
+│   │   ├── js/                     # main.js (shared) + contact.js, inspiration.js
+│   │   └── images/                 # Local placeholder images (hero + products +
+│   │                                #   images/inspiration/ look-book photos)
 │   └── src/                         # React source (used by app.html & login.html)
 │       ├── App.jsx                   # Root of the Fitting Room SPA (routing + state)
 │       ├── LoginApp.jsx                # Root of the Login page
@@ -82,7 +88,7 @@ fitted/
 │       └── styles/                               # React-page-specific CSS
 ├── backend/                   # Project 2 Express API (auth, Photos, Gemini, Firestore)
 │   ├── app.js                  # Entry point; also serves frontend/dist in production
-│   ├── routes/ middleware/ services/ agents/ config/ data/ tests/
+│   ├── routes/ middleware/ services/ agents/ config/ data/ utils/ tests/
 │   └── package.json
 ├── DockerContainer/            # Legacy Project 1 submission: Apache-only static-site image
 │   ├── Dockerfile
@@ -98,6 +104,8 @@ fitted/
 | Home | `index.html` | HTML/CSS/JS + Bootstrap |
 | About | `about.html` | HTML/CSS/JS + Bootstrap |
 | Contact | `contact.html` | HTML/CSS/JS + Bootstrap |
+| Architecture | `architecture.html` | HTML/CSS/JS + Bootstrap |
+| Inspiration (Look Book) | `inspiration.html` | HTML/CSS/JS + Bootstrap |
 | App (Virtual Fitting Room) | `app.html` → `src/App.jsx` | React + React Router |
 | Login | `login.html` → `src/LoginApp.jsx` | React |
 
@@ -115,11 +123,21 @@ All components live in `src/components/`:
   Bootstrap's responsive grid classes; shows an empty-state message when
   the list is empty.
 - **CategoryFilter** — the All / Tops / Outerwear / Dresses / Bottoms pills.
-- **PhotoUploader** — lets the user choose a photo from their computer and
-  previews it with the FileReader API (nothing is uploaded to a server).
+- **PhotoUploader** — lets the user choose a main photo from their computer
+  and previews it with the FileReader API (nothing is uploaded to a server
+  until "Try It On" is clicked). Also renders two optional angle slots
+  ("Add Side" / "Add Back") so the Fitting Room can request a genuine
+  side and back try-on image, not just a front one.
 - **SelectedProduct** — shows the currently-selected product and the
-  "Try It On" button.
-- **TryOnPanel** — shows the simulated try-on loading state and result.
+  "Try It On" button, which is disabled with an explanatory hint until the
+  user has both uploaded a photo and signed in with Google (the real
+  Virtual Try-On call requires an authenticated request).
+- **TryOnPanel** — a white (or user-selected-color) "stage" that shows the
+  loading state and then the real generated try-on image for whichever
+  angle tab (Front / Side / Back) is active.
+- **GoogleSignInButton** — wraps the Google Identity Services button;
+  reused on both the Login page and the Fitting Room's AI
+  recommendations/try-on flow, backed by the shared `useGoogleAuth` hook.
 - **FavoritesButton** — the reusable heart-icon toggle used inside
   ProductCard.
 - **LoginForm** / **RegisterForm** — the Login page's two forms.
@@ -133,8 +151,14 @@ All components live in `src/components/`:
   the Fitting Room tab.
 - **Async state / loading states** — `FittingRoomPage.jsx` tracks
   `tryOnStatus` (`"idle" | "loading" | "done"`) around the `await
-  simulateTryOn(...)` call, and `TryOnPanel.jsx` renders a different UI for
+  requestMultiAngleTryOn(...)` call (one real `POST /api/try-on` per
+  supplied angle photo), and `TryOnPanel.jsx` renders a different UI for
   each value.
+- **Persisted state via a side effect** — `useGoogleAuth.js` restores a
+  saved Google session from `localStorage` in a mount-only `useEffect`,
+  and a second `useEffect` (watching `[idToken, profile, accessToken]`)
+  writes it back out whenever sign-in state actually changes, so signing
+  in on the Login page keeps the user signed in on the App page too.
 - **Component-local state** — `RegisterForm.jsx` and the category filters in
   `ShopPage.jsx` / `FittingRoomPage.jsx` manage their own `useState` because
   nothing outside those components needs to see every keystroke or filter
@@ -191,6 +215,8 @@ there:
 - `/` or `/index.html` → Home
 - `/about.html` → About
 - `/contact.html` → Contact
+- `/architecture.html` → Architecture
+- `/inspiration.html` → Inspiration (Look Book)
 - `/app.html` → Virtual Fitting Room SPA
 - `/login.html` → Login
 
@@ -201,7 +227,7 @@ cd frontend
 npm run build
 ```
 
-This runs Vite's production build for **all five pages** (not just the
+This runs Vite's production build for **all seven pages** (not just the
 React ones) and outputs everything to `frontend/dist/`. Preview the
 production build locally with:
 
