@@ -289,7 +289,7 @@ by one Orchestrator, rather than a single unlabeled Gemini call:
 | StyleAnalyst | ✅ Implemented as a single structured Gemini call | Real tool-calling: `getPhotoAnalyses(uid)`, `analyzeNewPhotos(uid)` |
 | LookBuilder | ✅ Implemented as a single structured Gemini call (full catalog pasted into the prompt) | Real tool-calling: `searchCatalog(filters)`, `getProduct(id)` |
 | LookCritic | ✅ Implemented as a single structured Gemini call + a code-level rule override that always has final say | Real tool-calling: `checkBudget(look, budget)`, `checkAvoidList(look, brief)` — kept as a hybrid, since the code-level check must never become optional |
-| Presenter | ❌ Not yet implemented | Tools: `renderTryOn(photo, products)`, `saveLook(uid, look)` |
+| Presenter | ❌ Not yet implemented as an agent | The underlying rendering now exists as a real API endpoint (`POST /api/try-on`, `backend/services/virtualTryOnService.js` — Vertex AI's Virtual Try-On model), called directly by the frontend today; Presenter's planned job is deciding *when* to call it and writing a stylist note, not generating the image itself. Tools: `renderTryOn(photo, products)`, `saveLook(uid, look)` |
 | StyleScout | ✅ Implemented — deterministic visual-similarity ranking (code) + one structured Gemini call to curate | Real tool-calling: `searchByImage(embedding)`, letting the model decide when a visual search is the right move instead of it always being a separate endpoint |
 
 None of the implemented agents currently use Gemini's real function-calling
@@ -308,7 +308,7 @@ should be) a callable agent tool:
 |---|---|---|
 | P1 — Photo Analysis | Tool (planned) for StyleAnalyst: `analyzeNewPhotos(uid)` | StyleAnalyst should decide when a photo needs (re-)analyzing, not the frontend |
 | P2 — Photo Check | API endpoint | A synchronous UX gate right after upload, before any agent runs — nothing decides to invoke it |
-| P3 — Virtual Try-On | Tool (planned) for Presenter: `renderTryOn(photo, products)` | Presenter decides when the winning look is ready to render |
+| P3 — Virtual Try-On | API endpoint today (`POST /api/try-on`) | Real Vertex AI image generation, but called directly by the Fitting Room right now, not yet behind a Presenter agent decision — see the Implementation status table above |
 | A1 — Voice Style Request | API endpoint | User-triggered, one-shot, no agent decision involved |
 | A2 — Voice Refinement | API endpoint | Parses the follow-up into structured changes that feed the *next* Orchestrator loop iteration — the loop consumes its output, it isn't called mid-reasoning |
 | StyleAnalyst | Agent | Reasons over a user's photo history to build a profile |
@@ -423,6 +423,16 @@ flowchart TD
   directly via REST + `google-auth-library`) — turns a photo into a
   vector for StyleScout's visual-similarity search; see **Visual
   similarity search: how StyleScout works** above.
+- **Vertex AI Virtual Try-On** (`virtual-try-on-001`, same REST +
+  `google-auth-library` pattern) — generates one real composite image
+  of the user wearing a selected product (`POST /api/try-on`,
+  `backend/services/virtualTryOnService.js`). The model takes a person
+  photo and a garment photo and returns ONE image following whatever
+  pose is already in that photo -- it has no "angle" parameter -- so a
+  genuine front/side/back result is one real call per angle-photo the
+  user supplies (the Fitting Room's photo uploader has optional side/
+  back slots for exactly this; see `frontend/src/services/
+  tryOnService.js`).
 - **Google Identity Services** — real "Sign in with Google" (ID token)
   plus a separate OAuth consent flow for Google Photos access.
 - **Google Photos Picker API** — lets a signed-in user pick photos from
@@ -460,10 +470,12 @@ is now real and described above. What's genuinely still missing:
   each a single structured Gemini call today, not Gemini's function-calling
   API. The planned tools for each are listed in the **Implementation
   status** table above.
-- **P3 — Virtual Try-On preview image** — Fitted recommends and assembles
-  complete looks, but does not yet render an AI image of the user wearing
-  them. This is the one piece of the original "virtual try-on" concept not
-  yet connected.
+- **Virtual Try-On behind a Presenter agent decision** — `POST /api/try-on`
+  now generates a real image (Vertex AI's Virtual Try-On model), but it's
+  called directly by the Fitting Room's "Try It On" button today, not yet
+  decided-and-invoked by a Presenter agent as originally planned (see the
+  Implementation status table above). Presenter's other planned job --
+  writing a stylist's note for the winning look -- is also still open.
 - **Real commerce catalog for the Fitting Room** — the standalone
   **Shop** page now pulls live from Shopify's Mock Shop (see **APIs and
   tools used to build this** above). `backend/data/products.js` (the

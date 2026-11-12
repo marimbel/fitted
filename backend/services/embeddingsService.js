@@ -27,6 +27,7 @@
  */
 import { GoogleAuth } from "google-auth-library";
 import axios from "axios";
+import { fetchImageAsBase64 } from "../utils/fetchImage.js";
 
 const auth = new GoogleAuth({ scopes: "https://www.googleapis.com/auth/cloud-platform" });
 
@@ -36,17 +37,6 @@ function endpointUrl() {
   const project = process.env.GCP_PROJECT_ID;
   const location = process.env.VERTEX_LOCATION || "us-central1";
   return `https://${location}-aiplatform.googleapis.com/v1/projects/${project}/locations/${location}/publishers/google/models/${MODEL}:predict`;
-}
-
-/**
- * Fetches an external image URL and returns its raw bytes as base64 --
- * Vertex's predict API takes image bytes directly, not a URL, so this
- * is the one extra step needed for catalog products (data/products.js
- * stores an `image` URL, same as the frontend's copy of this catalog).
- */
-async function fetchImageAsBase64(imageUrl) {
-  const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-  return Buffer.from(response.data).toString("base64");
 }
 
 /**

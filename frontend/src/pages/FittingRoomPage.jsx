@@ -8,7 +8,7 @@ import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
 import { CATEGORIES, PRODUCTS } from "../data/products.js";
-import { simulateMultiAngleTryOn } from "../services/tryOnService.js";
+import { requestMultiAngleTryOn } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
 import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
@@ -44,6 +44,14 @@ export default function FittingRoomPage({
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
+  // Optional extra angle photos -- side/back are NOT lifted to App.jsx
+  // like `photo` (the front photo) is, because nothing outside this
+  // page needs them (unlike `photo`, which Google Photos import and
+  // StyleAnalyst also touch). See PhotoUploader.jsx's doc comment for
+  // why a real multi-angle result needs a real photo per angle.
+  const [sidePhoto, setSidePhoto] = useState(null);
+  const [backPhoto, setBackPhoto] = useState(null);
+
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
   const [tryOnAngles, setTryOnAngles] = useState([]);
@@ -67,12 +75,23 @@ export default function FittingRoomPage({
 
   async function handleTryOn() {
     setTryOnStatus("loading");
-    // PROJECT 2: Replace this simulated operation with the Express API
-    // endpoint for Google Virtual Try-On (see src/services/tryOnService.js) —
-    // deferred per the proposal review until the core workflow below is solid.
-    const result = await simulateMultiAngleTryOn(photo, selectedProduct);
-    setTryOnAngles(result.angles);
-    setTryOnStatus("done");
+    try {
+      // Real Vertex AI Virtual Try-On call (see src/services/tryOnService.js
+      // and backend/services/virtualTryOnService.js) -- one call per angle
+      // photo supplied (front always, side/back only if uploaded).
+      const result = await requestMultiAngleTryOn({
+        idToken: auth.idToken,
+        photos: { front: photo, side: sidePhoto, back: backPhoto },
+        product: selectedProduct,
+      });
+      setTryOnAngles(result.angles);
+      setTryOnStatus("done");
+      trackEvent({ category: "API Request", action: "Called Virtual Try-On API", label: selectedProduct?.name });
+    } catch (err) {
+      setTryOnAngles([{ key: "front", label: "Front", error: err.message }]);
+      setTryOnStatus("done");
+      logError("try_on_failed", err);
+    }
   }
 
   async function handleImportFromGooglePhotos() {
@@ -151,9 +170,18 @@ export default function FittingRoomPage({
             onPhotoSelected={onPhotoSelected}
             onImportFromGooglePhotos={auth.isSignedIn ? handleImportFromGooglePhotos : undefined}
             googlePhotosStatus={photosPicker.status}
+            sidePhoto={sidePhoto}
+            onSidePhotoSelected={setSidePhoto}
+            backPhoto={backPhoto}
+            onBackPhotoSelected={setBackPhoto}
           />
 
-          <SelectedProduct product={selectedProduct} hasPhoto={Boolean(photo)} onTryOn={handleTryOn} />
+          <SelectedProduct
+            product={selectedProduct}
+            hasPhoto={Boolean(photo)}
+            isSignedIn={auth.isSignedIn}
+            onTryOn={handleTryOn}
+          />
 
           <TryOnPanel status={tryOnStatus} product={selectedProduct} angles={tryOnAngles} />
         </div>

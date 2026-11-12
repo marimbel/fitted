@@ -12,7 +12,7 @@ import { useState } from "react";
  * Three visual states, driven by the `status` prop from FittingRoomPage:
  *
  *   "idle"    - nothing has been requested yet
- *   "loading" - simulateMultiAngleTryOn() is in flight
+ *   "loading" - requestMultiAngleTryOn() is in flight (see tryOnService.js)
  *   "done"    - resolved; `angles` holds one entry per angle
  *
  * `stageColor` is local UI state (useState), not lifted to App.jsx --
@@ -69,21 +69,30 @@ export default function TryOnPanel({ status, product, angles }) {
           </div>
         )}
 
-        {status === "done" && (
+        {status === "done" && activeResult?.imageDataUrl && (
           <div className="try-on-result">
-            {/* A generic standing-figure glyph, NOT a rendering of the
-                user -- real per-angle images are what PROJECT 2 would
-                replace this stage's contents with (see tryOnService.js). */}
-            <svg className="try-on-figure" width="64" height="120" viewBox="0 0 64 120" aria-hidden="true">
-              <circle cx="32" cy="16" r="13" fill="currentColor" opacity="0.35" />
-              <path d="M14 112 L18 48 Q32 38 46 48 L50 112" fill="currentColor" opacity="0.35" />
-            </svg>
+            <img className="try-on-generated-image" src={activeResult.imageDataUrl} alt={`You wearing ${product?.name || "this item"} (${activeResult.label.toLowerCase()})`} />
             {product && (
               <p className="try-on-result-product">
                 {product.name} — ${product.price}
               </p>
             )}
-            <p className="try-on-result-message">{activeResult?.message}</p>
+          </div>
+        )}
+
+        {status === "done" && activeResult && !activeResult.imageDataUrl && (
+          <div className="try-on-result">
+            {/* A generic standing-figure glyph, NOT a rendering of the
+                user -- shown only when this angle's real generation
+                failed (e.g. Vertex AI's safety filter declined this
+                specific photo). See tryOnService.js. */}
+            <svg className="try-on-figure" width="64" height="120" viewBox="0 0 64 120" aria-hidden="true">
+              <circle cx="32" cy="16" r="13" fill="currentColor" opacity="0.35" />
+              <path d="M14 112 L18 48 Q32 38 46 48 L50 112" fill="currentColor" opacity="0.35" />
+            </svg>
+            <p className="try-on-result-message try-on-result-error">
+              {activeResult.error || "Something went wrong generating this angle."}
+            </p>
           </div>
         )}
       </div>

@@ -2,17 +2,20 @@
  * SelectedProduct.jsx
  *
  * Shows a summary of whichever product the user has selected from the
- * grid, plus the "Try It On" button that kicks off the simulated try-on
- * flow. This component demonstrates conditional rendering: it displays a
- * different message depending on whether a product has been selected and
- * whether a photo has been uploaded yet.
+ * grid, plus the "Try It On" button that kicks off the (now real)
+ * Virtual Try-On flow. This component demonstrates conditional
+ * rendering: it displays a different message depending on whether a
+ * product is selected, a photo is uploaded, and the user is signed in.
  *
  * Props:
- *   product   - the selected product object, or null
- *   hasPhoto  - boolean, whether the user has uploaded a photo
- *   onTryOn   - event handler for the "Try It On" button
+ *   product     - the selected product object, or null
+ *   hasPhoto    - boolean, whether the user has uploaded a front photo
+ *   isSignedIn  - boolean -- try-on now calls a real, billed Vertex AI
+ *                 endpoint (routes/tryOn.js), which requires sign-in
+ *                 the same way generating looks or StyleScout does.
+ *   onTryOn     - event handler for the "Try It On" button
  */
-export default function SelectedProduct({ product, hasPhoto, onTryOn }) {
+export default function SelectedProduct({ product, hasPhoto, isSignedIn, onTryOn }) {
   if (!product) {
     return (
       <div className="selected-product selected-product-empty">
@@ -21,7 +24,7 @@ export default function SelectedProduct({ product, hasPhoto, onTryOn }) {
     );
   }
 
-  const canTryOn = hasPhoto;
+  const canTryOn = hasPhoto && isSignedIn;
 
   return (
     <div className="selected-product">
@@ -37,7 +40,10 @@ export default function SelectedProduct({ product, hasPhoto, onTryOn }) {
           Try It On
         </button>
 
-        {!canTryOn && <p className="selected-product-hint">Upload a photo above to try this on.</p>}
+        {!hasPhoto && <p className="selected-product-hint">Upload a photo above to try this on.</p>}
+        {hasPhoto && !isSignedIn && (
+          <p className="selected-product-hint">Sign in with Google to try this on — it's a real AI call.</p>
+        )}
       </div>
     </div>
   );
