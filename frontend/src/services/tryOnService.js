@@ -43,6 +43,34 @@ export async function requestTryOn({ idToken, photo, product }) {
 }
 
 /**
+ * Asks Gemini to IMAGINE a side or back view of the real front result
+ * above -- not a real photo of the user from that angle, since no API
+ * can derive one from a single front photo (see the file doc comment).
+ * The caller (TryOnPanel.jsx) always labels whatever this returns
+ * "AI-imagined."
+ */
+export async function requestImaginedAngle({ idToken, frontImageDataUrl, angle }) {
+  if (!frontImageDataUrl) {
+    throw new Error("A real try-on result is required before imagining another angle");
+  }
+
+  try {
+    const { imageBase64, mimeType } = await apiFetch("/api/try-on/imagine-angle", {
+      idToken,
+      method: "POST",
+      body: JSON.stringify({
+        frontImageBase64: toBase64Body(frontImageDataUrl),
+        mimeType: mimeTypeFromDataUrl(frontImageDataUrl),
+        angle,
+      }),
+    });
+    return { success: true, imageDataUrl: `data:${mimeType};base64,${imageBase64}` };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+/**
  * PhotoUploader.jsx stores the photo as a full data URL
  * ("data:image/jpeg;base64,/9j/4AAQ..."), but the backend/Vertex AI
  * only wants the base64 payload itself -- this strips the data URL
@@ -51,4 +79,9 @@ export async function requestTryOn({ idToken, photo, product }) {
 function toBase64Body(dataUrl) {
   const commaIndex = dataUrl.indexOf(",");
   return commaIndex === -1 ? dataUrl : dataUrl.slice(commaIndex + 1);
+}
+
+function mimeTypeFromDataUrl(dataUrl) {
+  const match = /^data:([^;,]+)/.exec(dataUrl);
+  return match ? match[1] : "image/png";
 }

@@ -5,6 +5,7 @@ import SpaTabs from "./components/SpaTabs.jsx";
 import FittingRoomPage from "./pages/FittingRoomPage.jsx";
 import ShopPage from "./pages/ShopPage.jsx";
 import MyLooksPage from "./pages/MyLooksPage.jsx";
+import GooglePhotosPage from "./pages/GooglePhotosPage.jsx";
 import { useGoogleAuth } from "./hooks/useGoogleAuth.js";
 import { trackPageview, trackEvent } from "./services/analytics.js";
 import { apiFetch } from "./services/apiClient.js";
@@ -47,6 +48,17 @@ export default function App() {
   const [photo, setPhoto] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [favoriteIds, setFavoriteIds] = useState([]);
+
+  // Google Photos imports (each one Gemini-analyzed) -- lifted here,
+  // not local to either page that touches it, so the dedicated Google
+  // Photos tab (GooglePhotosPage.jsx) and the Fitting Room's "Generate
+  // Looks" flow (FittingRoomPage.jsx) both see the same list, the same
+  // way `photo` and `shopProducts` are shared across pages below.
+  const [photoAnalyses, setPhotoAnalyses] = useState([]);
+
+  function handleAnalysesAdded(newAnalyses) {
+    setPhotoAnalyses((current) => [...current, ...newAnalyses]);
+  }
 
   // Project 2: the Shop page's catalog, fetched once here (not inside
   // ShopPage itself) from a REAL external commerce API -- Shopify's
@@ -118,6 +130,7 @@ export default function App() {
                 favoriteIds={favoriteIds}
                 onToggleFavorite={handleToggleFavorite}
                 auth={auth}
+                photoAnalyses={photoAnalyses}
               />
             }
           />
@@ -132,6 +145,18 @@ export default function App() {
                 onSelectProduct={setSelectedProduct}
                 favoriteIds={favoriteIds}
                 onToggleFavorite={handleToggleFavorite}
+              />
+            }
+          />
+          <Route
+            path="/photos"
+            element={
+              <GooglePhotosPage
+                auth={auth}
+                photoAnalyses={photoAnalyses}
+                onAnalysesAdded={handleAnalysesAdded}
+                activePhoto={photo}
+                onPhotoSelected={setPhoto}
               />
             }
           />

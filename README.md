@@ -44,6 +44,10 @@ rather than a generic SaaS dashboard.
   reasoning call (see **AI Agent Architecture**)
 - **Google Identity Services + Google Photos Picker API** — real
   Google sign-in and photo import
+- **@imgly/background-removal** (client-side WASM/ONNX, `frontend/src/hooks/useBackgroundRemoval.js`) —
+  strips the backdrop out of the real try-on image in the browser so only
+  the person's silhouette sits on the Stage's chosen color; no server
+  round-trip or API key involved
 - **Firestore** (`@google-cloud/firestore`) — persistence for photo
   analyses, style requests, and generated look sets
 - **Google Cloud Logging + Google Analytics 4** — structured server
@@ -82,7 +86,7 @@ fitted/
 │       ├── main-app.jsx                 # React entry point for app.html
 │       ├── main-login.jsx                # React entry point for login.html
 │       ├── components/                     # Reusable React components
-│       ├── pages/                           # Shop / Fitting Room / My Looks pages
+│       ├── pages/                           # Shop / Fitting Room / My Looks / Google Photos pages
 │       ├── data/products.js                   # Mock product catalog
 │       ├── services/apiClient.js               # Shared fetch wrapper to the backend
 │       └── styles/                               # React-page-specific CSS
@@ -116,7 +120,8 @@ All components live in `src/components/`:
 - **Navbar** — the main Fitted site navigation, re-implemented in React so
   it can appear on both the App and Login pages.
 - **SpaTabs** — the Fitting Room SPA's own internal navigation
-  (Shop / Fitting Room / My Looks), kept conceptually separate from Navbar.
+  (Shop / Fitting Room / My Looks / Google Photos), kept conceptually
+  separate from Navbar.
 - **ProductCard** — a single product's image, name, category, price,
   favorite (heart) button, and Select button.
 - **ProductGrid** — lays out a list of products as ProductCards using
@@ -125,19 +130,29 @@ All components live in `src/components/`:
 - **CategoryFilter** — the All / Tops / Outerwear / Dresses / Bottoms pills.
 - **PhotoUploader** — a compact control (not its own preview box) that lets
   the user choose a photo from their computer via the FileReader API
-  (nothing is uploaded to a server until "Try It On" is clicked), or import
-  one from Google Photos; the actual preview renders inside TryOnPanel's
-  Stage below.
+  (nothing is uploaded to a server until "Try It On" is clicked); the
+  actual preview renders inside TryOnPanel's Stage below. Importing from
+  Google Photos moved to its own **Google Photos** tab (`GooglePhotosPage`,
+  below) so the picker's errors and the imported-photo grid have room to
+  breathe instead of crowding the Stage toolbar.
 - **SelectedProduct** — shows the currently-selected product and the
   "Try It On" button, which is disabled with an explanatory hint until the
   user has both uploaded a photo and signed in with Google (the real
   Virtual Try-On call requires an authenticated request).
 - **TryOnPanel** — the Fitting Room's full-width "Stage": a white (or
-  user-selected-color) backdrop that shows the uploaded photo, then a
-  loading state, then the real generated try-on image, with a subtle
-  mouse-driven 3D tilt on whichever image is showing (a CSS effect on
-  one real photo, not a second camera angle -- see the Vertex AI
-  Virtual Try-On entry under **APIs and tools used to build this**).
+  user-selected-color, now including three pastels -- pale pink, pale
+  blue, pale yellow) backdrop that shows the uploaded photo, then a
+  loading state, then the real generated try-on image with its own
+  background stripped out client-side (`useBackgroundRemoval.js`, see
+  **Technologies**) so only the person's silhouette sits on the chosen
+  backdrop, plus a subtle mouse-driven 3D tilt (a CSS effect on one real
+  photo, not a second camera angle). Once a real result exists, Front /
+  Side / Back tabs let the user ask Gemini to *imagine* a side or back
+  view from that one photo; each imagined image carries an always-visible
+  "AI-Imagined" badge directly over the image (not just a caption) so it
+  can never be mistaken for a real photo -- see the Vertex AI Virtual
+  Try-On and Gemini Image Generation entries under **APIs and tools used
+  to build this**.
 - **GoogleSignInButton** — a Fitted-styled "Sign in with Google" button
   that opens a small popup with Google's own official button inside it;
   reused on both the Login page and the Fitting Room, backed by the
@@ -148,11 +163,13 @@ All components live in `src/components/`:
 
 ## React State Demonstrations
 
-- **Lifted state** — `src/App.jsx` owns `photo`, `selectedProduct`, and
-  `favoriteIds` with `useState`, and passes them (plus setter functions) down
-  as props to `ShopPage`, `FittingRoomPage`, and `MyLooksPage`. This is why
-  selecting a product in the Shop page is still selected when you switch to
-  the Fitting Room tab.
+- **Lifted state** — `src/App.jsx` owns `photo`, `selectedProduct`,
+  `favoriteIds`, and `photoAnalyses` with `useState`, and passes them (plus
+  setter functions) down as props to `ShopPage`, `FittingRoomPage`,
+  `MyLooksPage`, and the new `GooglePhotosPage`. This is why selecting a
+  product in the Shop page is still selected when you switch to the Fitting
+  Room tab, and why a photo imported on the Google Photos tab is available
+  immediately in the Fitting Room.
 - **Async state / loading states** — `FittingRoomPage.jsx` tracks
   `tryOnStatus` (`"idle" | "loading" | "done"`) around the `await
   requestTryOn(...)` call (one real `POST /api/try-on` call), and
@@ -462,10 +479,26 @@ flowchart TD
   3D model) from one photo. The Fitting Room's Stage (TryOnPanel.jsx)
   is honest about that: it shows this one real image with a mouse-
   driven CSS tilt for presentation, not a fake rotation.
+- **Gemini Image Generation** (`@google/generative-ai`, same SDK as the
+  text agents, model id configurable via the `GEMINI_IMAGE_MODEL` env var)
+  — `POST /api/try-on/imagine-angle` (`backend/services/imaginedAngleService.js`)
+  sends the real try-on image plus a side- or back-view prompt to Gemini's
+  image output mode (`generationConfig.responseModalities: ["Text", "Image"]`)
+  and returns whatever image comes back. This is explicitly a *speculative*
+  reimagining, not a real second photo -- see the Virtual Try-On entry just
+  above for why no API can produce a genuine one. The Fitting Room labels
+  every result from this endpoint "AI-Imagined" directly on the image for
+  that reason.
 - **Google Identity Services** — real "Sign in with Google" (ID token)
   plus a separate OAuth consent flow for Google Photos access.
 - **Google Photos Picker API** — lets a signed-in user pick photos from
   their own Google Photos library without granting broad library access.
+  Importing now lives on its own **Google Photos** tab
+  (`GooglePhotosPage.jsx`) with its own import button and thumbnail grid;
+  if the picker times out (most commonly because the signed-in Google
+  account's photo library is empty), the real error from
+  `useGooglePhotosPicker.js` is surfaced with plain-language guidance
+  instead of a generic "try again" message.
 - **Shopify Mock Shop (Storefront GraphQL API)** — a real, live external
   commerce API (`https://mock.shop/api`, no business account or API key
   required) that powers the standalone **Shop** page's catalog

@@ -26,6 +26,9 @@ export default function SpaTabs() {
       <NavLink to="/my-looks" className={({ isActive }) => `spa-tab${isActive ? " is-active" : ""}`}>
         My Looks
       </NavLink>
+      <NavLink to="/photos" className={({ isActive }) => `spa-tab${isActive ? " is-active" : ""}`}>
+        Google Photos
+      </NavLink>
     </div>
   );
 }

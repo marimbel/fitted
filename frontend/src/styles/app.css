@@ -234,6 +234,161 @@
   }
 }
 
+/* The "AI-Imagined" badge -- always layered directly on the image
+   itself (not just in a caption elsewhere) so it travels with the
+   image wherever it's shown and can't be mistaken for a real photo. */
+.try-on-imagined-badge {
+  position: absolute;
+  top: var(--space-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-dark);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.try-on-result {
+  position: relative;
+}
+
+/* ---- Front / Side / Back view tabs, under the Stage ---- */
+.try-on-view-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.try-on-view-tab {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background-color: var(--color-card);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.try-on-view-tab:hover {
+  border-color: var(--color-accent);
+}
+
+.try-on-view-tab.is-active {
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+  font-weight: 600;
+}
+
+.try-on-view-tabs-note {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-left: var(--space-xs);
+}
+
+@media (max-width: 480px) {
+  .try-on-view-tabs-note {
+    flex-basis: 100%;
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
+/* ---- Google Photos tab (GooglePhotosPage.jsx) ---- */
+.google-photos-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+}
+
+.google-photos-empty {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-card);
+  color: var(--color-text-secondary);
+}
+
+.google-photos-empty p {
+  margin-bottom: var(--space-xs);
+}
+
+.google-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-sm);
+}
+
+.google-photo-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-card);
+  overflow: hidden;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.google-photo-thumb:hover {
+  border-color: var(--color-accent);
+}
+
+.google-photo-thumb.is-active {
+  border-color: var(--color-dark);
+  border-width: 2px;
+}
+
+.google-photo-thumb-media {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: var(--color-bg-secondary);
+}
+
+.google-photo-thumb-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.google-photo-thumb-caption {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  padding: var(--space-xs) var(--space-sm);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.google-photo-thumb-badge {
+  position: absolute;
+  top: var(--space-xs);
+  right: var(--space-xs);
+  background-color: var(--color-dark);
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+
 /* ---- Below the Stage: selected product + "Try It On" ---- */
 .fitting-room-below-stage {
   max-width: 460px;

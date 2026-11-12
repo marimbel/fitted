@@ -7,10 +7,10 @@ import ProductGrid from "../components/ProductGrid.jsx";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
+import { NavLink } from "react-router-dom";
 import { CATEGORIES, PRODUCTS } from "../data/products.js";
-import { requestTryOn } from "../services/tryOnService.js";
+import { requestTryOn, requestImaginedAngle } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
-import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
 import { trackEvent } from "../services/analytics.js";
 import { logEvent, logError } from "../services/logger.js";
@@ -24,15 +24,19 @@ import { logEvent, logError } from "../services/logger.js";
  *      at the top of the page (TryOnPanel.jsx) instead of a two-column
  *      layout -- the uploaded photo and the real Virtual Try-On result
  *      both display there, with a product picker below it.
- *   2. The Project 2 flow: sign in with Google, pull in a photo from
- *      Google Photos and/or record a spoken style request, then let
- *      the agent pipeline (backend/agents/orchestrator.js) recommend
- *      whole looks instead of one item at a time.
+ *   2. The Project 2 flow: sign in with Google, record a spoken style
+ *      request, and (using photos imported from the separate Google
+ *      Photos tab -- GooglePhotosPage.jsx) let the agent pipeline
+ *      (backend/agents/orchestrator.js) recommend whole looks instead
+ *      of one item at a time.
  *
  * Props (all Project 1 state, still lifted to App.jsx):
  *   photo, onPhotoSelected           - the uploaded photo
  *   selectedProduct, onSelectProduct - the product chosen from the grid
  *   favoriteIds, onToggleFavorite    - the user's saved products
+ *   photoAnalyses                    - photos imported from the Google
+ *                                       Photos tab (GooglePhotosPage.jsx),
+ *                                       each already analyzed by Gemini
  */
 export default function FittingRoomPage({
   photo,
@@ -42,6 +46,7 @@ export default function FittingRoomPage({
   favoriteIds,
   onToggleFavorite,
   auth,
+  photoAnalyses,
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -49,13 +54,21 @@ export default function FittingRoomPage({
   const [tryOnStatus, setTryOnStatus] = useState("idle");
   const [tryOnResult, setTryOnResult] = useState(null);
 
-  // --- Project 2: Photos import + voice style request. `auth` itself is
-  // now a prop (lifted up to App.jsx) so My Looks can read back what's
-  // saved under the same signed-in account. ---
-  const photosPicker = useGooglePhotosPicker({ idToken: auth.idToken, accessToken: auth.accessToken });
+  // Which Stage view is active ("front" | "side" | "back"), and the
+  // Gemini-imagined results for side/back (keyed by angle). Side/Back
+  // are speculative -- see TryOnPanel.jsx and tryOnService.js's
+  // requestImaginedAngle -- so they're kept completely separate from
+  // tryOnResult above, which is the one REAL Vertex AI result.
+  const [activeStageView, setActiveStageView] = useState("front");
+  const [imaginedAngles, setImaginedAngles] = useState({});
+
+  // --- Project 2: voice style request. `auth` itself is now a prop
+  // (lifted up to App.jsx) so My Looks can read back what's saved
+  // under the same signed-in account; `photoAnalyses` is a prop for
+  // the same reason -- it's imported from the Google Photos tab, not
+  // owned by this page. ---
   const recorder = useVoiceRecorder();
 
-  const [photoAnalyses, setPhotoAnalyses] = useState([]);
   const [styleRequest, setStyleRequest] = useState(null);
   const [lookStatus, setLookStatus] = useState("idle"); // idle | loading | done | error
   const [lookResult, setLookResult] = useState(null);
@@ -73,10 +86,14 @@ export default function FittingRoomPage({
     onSelectProduct(product);
     setTryOnStatus("idle");
     setTryOnResult(null);
+    setActiveStageView("front");
+    setImaginedAngles({});
   }
 
   async function handleTryOn() {
     setTryOnStatus("loading");
+    setActiveStageView("front");
+    setImaginedAngles({});
     try {
       // Real Vertex AI Virtual Try-On call (see src/services/tryOnService.js
       // and backend/services/virtualTryOnService.js) -- one real image,
@@ -92,15 +109,30 @@ export default function FittingRoomPage({
     }
   }
 
-  async function handleImportFromGooglePhotos() {
-    const newAnalyses = await photosPicker.pickPhotos();
-    if (newAnalyses?.length) {
-      setPhotoAnalyses((current) => [...current, ...newAnalyses]);
-      // Show the first picked photo in the same preview the local-file
-      // path uses, so the rest of the page doesn't need to know where
-      // the photo came from.
-      const first = newAnalyses[0];
-      onPhotoSelected(`data:${first.mimeType};base64,${first.previewBase64}`);
+  // Switching to Side/Back the first time (or after a failed attempt)
+  // kicks off a new Gemini call; switching back to a view that's
+  // already been imagined this round just redisplays the cached result
+  // -- TryOnPanel.jsx doesn't need to know the difference, it just
+  // calls this and waits for `imaginedAngles` to update.
+  async function handleStageViewChange(view) {
+    setActiveStageView(view);
+    if (view === "front") return;
+
+    const existing = imaginedAngles[view];
+    if (existing && existing.status === "loading") return; // already in flight
+    if (existing && existing.status === "done" && existing.success) return; // already have a real result, don't re-spend a call
+
+    setImaginedAngles((current) => ({ ...current, [view]: { status: "loading" } }));
+    const result = await requestImaginedAngle({
+      idToken: auth.idToken,
+      frontImageDataUrl: tryOnResult?.imageDataUrl,
+      angle: view,
+    });
+    setImaginedAngles((current) => ({ ...current, [view]: { status: "done", ...result } }));
+    if (result.success) {
+      trackEvent({ category: "API Request", action: "Called Gemini Image Generation", label: `Imagined ${view} view` });
+    } else {
+      logError("imagine_angle_failed", new Error(result.error));
     }
   }
 
@@ -168,14 +200,10 @@ export default function FittingRoomPage({
         status={tryOnStatus}
         result={tryOnResult}
         product={selectedProduct}
-        uploadControl={
-          <PhotoUploader
-            photo={photo}
-            onPhotoSelected={onPhotoSelected}
-            onImportFromGooglePhotos={auth.isSignedIn ? handleImportFromGooglePhotos : undefined}
-            googlePhotosStatus={photosPicker.status}
-          />
-        }
+        imaginedAngles={imaginedAngles}
+        activeView={activeStageView}
+        onViewChange={handleStageViewChange}
+        uploadControl={<PhotoUploader photo={photo} onPhotoSelected={onPhotoSelected} />}
       />
 
       <div className="fitting-room-below-stage">
@@ -230,7 +258,8 @@ export default function FittingRoomPage({
 
             {auth.isSignedIn && !canGenerateLooks && (
               <p className="style-request-status">
-                Import at least one photo and record a style request to generate looks.
+                Import at least one photo from the <NavLink to="/photos">Google Photos</NavLink> tab and
+                record a style request to generate looks.
               </p>
             )}
           </div>
