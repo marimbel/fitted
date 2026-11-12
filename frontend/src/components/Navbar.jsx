@@ -6,7 +6,7 @@
  *
  * This is intentionally plain HTML anchor tags (<a href="...">), not
  * React Router <Link> elements — Home/About/Try Fitted/Architecture/
- * Login/Contact are separate .html documents (see vite.config.js), so
+ * Inspiration/Login/Contact are separate .html documents (see vite.config.js), so
  * navigating between them is a normal full page load, not a
  * client-side route change.
  *
@@ -23,6 +23,7 @@ export default function Navbar({ activePage }) {
     { label: "About", href: "/about.html", key: "about" },
     { label: "Try Fitted", href: "/app.html", key: "app" },
     { label: "Architecture", href: "/architecture.html", key: "architecture" },
+    { label: "Inspiration", href: "/inspiration.html", key: "inspiration" },
     { label: "Login", href: "/login.html", key: "login" },
     { label: "Contact", href: "/contact.html", key: "contact" },
   ];

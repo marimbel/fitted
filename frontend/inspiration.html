@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inspiration — Fitted</title>
+  <meta name="description" content="Seasonal edits, runway-informed styling, and the archetypes we keep coming back to — browse for ideas, then bring the ones you love into your Fitting Room." />
+
+  <!-- Favicon / app icon (hanger glyph + Fitted wordmark) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Open Graph tags: control the title/description/image shown when
+       this page is shared as a link (iMessage, Slack, etc.) or added
+       to a phone's home screen, instead of a browser-generated
+       fallback preview. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Inspiration — Fitted" />
+  <meta property="og:description" content="Seasonal edits, runway-informed styling, and the archetypes we keep coming back to." />
+  <meta property="og:image" content="%VITE_SITE_URL%/images/icon-512.png" />
+  <meta property="og:url" content="%VITE_SITE_URL%/inspiration.html" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <link rel="stylesheet" href="/css/inspiration.css" />
+
+  <!-- GA4 (Google Analytics 4) client-side pageview tracking, same
+       property as the React pages (see src/services/analytics.js).
+       Loaded directly with Google's gtag.js since this is a plain
+       static page, not React. Vite replaces %VITE_GA4_MEASUREMENT_ID%
+       with the real value at build time (same mechanism as any other
+       VITE_ env var; see .env / .env.production). -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA4_MEASUREMENT_ID%"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag("js", new Date());
+    gtag("config", "%VITE_GA4_MEASUREMENT_ID%");
+  </script>
+</head>
+<!-- .inspiration-page scopes the dark/rose-pink navbar override in
+     inspiration.css to just this page — every other page keeps the
+     site's usual light navbar (see shared.css). -->
+<body class="inspiration-page">
+
+  <nav class="navbar navbar-expand-lg fitted-navbar sticky-top">
+    <div class="container-fitted">
+      <a class="navbar-brand" href="index.html">Fitted</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#fittedNav" aria-controls="fittedNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="fittedNav">
+        <ul class="navbar-nav align-items-lg-center">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="app.html">Try Fitted</a></li>
+          <li class="nav-item"><a class="nav-link" href="architecture.html">Architecture</a></li>
+          <li class="nav-item"><a class="nav-link active" href="inspiration.html">Inspiration</a></li>
+          <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="mainContent">
+
+  <!-- ============================= HERO ============================= -->
+  <header class="inspiration-hero">
+    <div class="container-fitted text-center">
+      <span class="eyebrow">The Look Book</span>
+      <h1>Get inspired before you get dressed.</h1>
+      <hr class="divider mx-auto" />
+      <p class="mx-auto">
+        Seasonal edits, runway-informed styling, and the archetypes we keep coming
+        back to — browse for ideas, then bring the ones you love into your
+        Fitting Room.
+      </p>
+    </div>
+  </header>
+
+  <!-- ============================= SHOP BY SEASON ============================= -->
+  <section>
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Shop by Season</span>
+          <h2>Four seasons, four moods</h2>
+        </div>
+      </div>
+      <div class="season-grid reveal">
+        <a class="season-card" href="inspiration.html?category=spring">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/spring.jpg" alt="Denim jacket, white top and jeans, boardwalk summer style" />
+            <span class="photo-tile-label">Spring</span>
+          </div>
+          <div class="season-meta"><span>32 looks</span><span>→</span></div>
+          <p>Pastels, linen, and the year's first lightness.</p>
+        </a>
+        <a class="season-card" href="inspiration.html?category=summer">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/summer.webp" alt="Yellow linen shirt with denim shorts and loafers, classic-casual menswear" />
+            <span class="photo-tile-label">Summer</span>
+          </div>
+          <div class="season-meta"><span>28 looks</span><span>→</span></div>
+          <p>Effortless dressing, built for heat and light.</p>
+        </a>
+        <a class="season-card" href="inspiration.html?category=fall">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/fall.jpg" alt="Couple wrapped in blankets with a thermos in an autumn forest" />
+            <span class="photo-tile-label">Fall</span>
+          </div>
+          <div class="season-meta"><span>41 looks</span><span>→</span></div>
+          <p>Texture, layering, and warmer neutrals.</p>
+        </a>
+        <a class="season-card" href="inspiration.html?category=winter">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/winter.jpg" alt="Couple in dark tailored coats and snakeskin over-the-knee boots on a city street" />
+            <span class="photo-tile-label">Winter</span>
+          </div>
+          <div class="season-meta"><span>35 looks</span><span>→</span></div>
+          <p>Structured outerwear and rich tailoring.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= RUNWAY EDITS ============================= -->
+  <section class="section-alt">
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Runway Edits</span>
+          <h2>Ideas pulled straight off the runway</h2>
+        </div>
+      </div>
+
+      <div class="edit-row reveal">
+        <a class="edit-image" href="inspiration.html?category=quiet-luxury">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/quiet-luxury.jpg" alt="Tweed blazer, knit tie and tailored trousers, quiet luxury menswear styling" />
+            <span class="photo-tile-label">Quiet Luxury</span>
+          </div>
+        </a>
+        <div class="edit-copy">
+          <span class="eyebrow">Fall / Winter 2026</span>
+          <h3>Quiet Luxury</h3>
+          <p>Minimal silhouettes and expensive-looking basics — nothing here is shouting for attention, and that's the point.</p>
+          <a class="edit-link" href="inspiration.html?category=quiet-luxury">View the edit →</a>
+        </div>
+      </div>
+
+      <div class="edit-row reverse reveal">
+        <a class="edit-image" href="inspiration.html?category=coastal-minimalism">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/coastal-minimalism.webp" alt="White linen set on a beach at the shoreline" />
+            <span class="photo-tile-label">Coastal Minimalism</span>
+          </div>
+        </a>
+        <div class="edit-copy">
+          <span class="eyebrow">Resort</span>
+          <h3>Coastal Minimalism</h3>
+          <p>Linen, soft neutrals, and clothing that moves like it's already on vacation.</p>
+          <a class="edit-link" href="inspiration.html?category=coastal-minimalism">View the edit →</a>
+        </div>
+      </div>
+
+      <div class="edit-row reveal">
+        <a class="edit-image" href="inspiration.html?category=modern-tailoring">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/modern-tailoring.jpg" alt="Sculptural black tailored blazer and cropped wide-leg trousers, modern editorial styling" />
+            <span class="photo-tile-label">Modern Tailoring</span>
+          </div>
+        </a>
+        <div class="edit-copy">
+          <span class="eyebrow">Spring 2027 Preview</span>
+          <h3>Modern Tailoring</h3>
+          <p>Sharp shoulders and structured waists, softened with fabrics you wouldn't expect on a blazer.</p>
+          <a class="edit-link" href="inspiration.html?category=modern-tailoring">View the edit →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= SHOP BY STYLE ============================= -->
+  <section>
+    <div class="container-fitted">
+      <div class="row justify-content-center text-center">
+        <div class="col-lg-7 reveal">
+          <span class="eyebrow">Shop by Style</span>
+          <h2>Find the archetype you keep coming back to</h2>
+        </div>
+      </div>
+      <div class="style-grid reveal">
+        <a class="style-card" href="inspiration.html?category=minimalist">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/minimalist.jpg" alt="Cream knit sweater and rust trousers, minimalist styling" />
+            <span class="photo-tile-label">Minimalist</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=tailored">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/tailored.webp" alt="Navy double-breasted blazer with tie, pocket square and watch" />
+            <span class="photo-tile-label">Tailored</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=romantic">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/romantic.jpg" alt="Embellished pale lavender tulle gown" />
+            <span class="photo-tile-label">Romantic</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=streetwear">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/streetwear.jpg" alt="Denim jacket and cargo pants, bold urban styling" />
+            <span class="photo-tile-label">Streetwear</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=bohemian">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/bohemian.jpg" alt="Purple printed kaftan dress in a Moroccan courtyard" />
+            <span class="photo-tile-label">Bohemian</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=avant-garde">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/avant-garde.webp" alt="Oversized black tailored blazer, avant-garde runway styling" />
+            <span class="photo-tile-label">Avant-Garde</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=classic">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/classic.jpg" alt="Vintage-inspired floral blouse, beret and linen skirt, classic styling" />
+            <span class="photo-tile-label">Classic</span>
+          </div>
+        </a>
+        <a class="style-card" href="inspiration.html?category=edgy">
+          <div class="img-zoom photo-tile">
+            <img src="/images/inspiration/edgy.jpg" alt="Leather jacket with a plaid shirt tied at the waist, street style" />
+            <span class="photo-tile-label">Edgy</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= CTA BAND ============================= -->
+  <section class="inspiration-cta">
+    <div class="container-fitted">
+      <h2>Found a look you love?</h2>
+      <p>Bring it into your Fitting Room and see how it fits your style.</p>
+      <a class="btn-fitted btn-light" href="app.html">Try It On</a>
+      <p class="cta-note">Virtual try-on is a prototype in this version of Fitted.</p>
+    </div>
+  </section>
+
+  </div><!-- /mainContent -->
+
+  <!-- ============================= DETAIL VIEW (season / edit / style click-through) =============================
+       Hidden by default. inspiration.js reads ?category=<slug> from the
+       URL and, when it matches, hides #mainContent and fills in this
+       shared template instead — a lightweight stand-in for real
+       per-category catalog pages (see inspiration.js for the data). -->
+  <section id="detailView" class="detail-view" hidden>
+    <div class="container-fitted">
+      <a href="inspiration.html" class="back-link">← Back to Inspiration</a>
+      <div class="detail-head">
+        <span class="eyebrow" id="detailKind"></span>
+        <h1 id="detailTitle"></h1>
+        <span class="detail-meta" id="detailMeta"></span>
+        <p id="detailDesc"></p>
+      </div>
+      <div class="img-zoom photo-tile detail-hero" id="detailHero"></div>
+      <div class="detail-grid" id="detailGrid"></div>
+      <p class="detail-note">These "looks" are placeholders standing in for a real catalog filter — once Project 2 adds a backend, this grid would pull matching products from Fitted's product data, the same way the Fitting Room's ProductGrid does.</p>
+    </div>
+  </section>
+
+  <!-- ============================= FOOTER ============================= -->
+  <footer class="fitted-footer">
+    <div class="container-fitted">
+      <div class="row gy-4">
+        <div class="col-md-4">
+          <h5>Fitted</h5>
+          <p class="mb-0" style="color:#c7c3ba;">Fashion, previewed before it's purchased.</p>
+        </div>
+        <div class="col-md-4">
+          <h5 class="h6">Site</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h5 class="h6">Product</h5>
+          <ul class="list-unstyled">
+            <li><a href="app.html">Virtual Fitting Room</a></li>
+            <li><a href="architecture.html">Agent Architecture</a></li>
+            <li><a href="inspiration.html">Inspiration</a></li>
+            <li><a href="login.html">Login</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-meta">&copy; 2026 Fitted.</div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS bundle (handles the navbar collapse toggle) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/main.js"></script>
+  <script src="/js/inspiration.js"></script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+/* Inspiration (Look Book) page — page-specific styling layered on top of
+   shared.css, following the same pattern as architecture.css: reuse the
+   site's existing tokens/utilities (.card-fitted, .eyebrow, .divider,
+   .img-zoom, .reveal) rather than inventing a parallel design system.
+
+   One deliberate exception: this page's navbar is dark with a rose-pink
+   hover state, instead of the site's usual light navbar. That look was
+   iterated on and approved specifically for this "editorial look book"
+   page, so it's scoped here with the .inspiration-page body class rather
+   than changed sitewide in shared.css. */
+
+body.inspiration-page .fitted-navbar {
+  background-color: var(--color-dark) !important;
+  border-bottom-color: #45433f;
+}
+
+body.inspiration-page .fitted-navbar .navbar-brand {
+  color: #ffffff;
+}
+
+body.inspiration-page .fitted-navbar .nav-link {
+  color: #ffffff;
+}
+
+body.inspiration-page .fitted-navbar .nav-link:hover,
+body.inspiration-page .fitted-navbar .nav-link.active {
+  color: #e8c3c8;
+  border-bottom-color: #e8c3c8;
+}
+
+/* Bootstrap's default hamburger icon is a dark SVG; invert it so it
+   reads on the dark navbar background at mobile widths. */
+body.inspiration-page .fitted-navbar .navbar-toggler-icon {
+  filter: invert(1);
+}
+
+body.inspiration-page .fitted-navbar .navbar-toggler {
+  border-color: #58564f;
+}
+
+/* ---- hero ---- */
+.inspiration-hero {
+  padding: var(--space-xl) 0 var(--space-lg) 0;
+}
+
+.inspiration-hero h1 {
+  font-size: clamp(2.3rem, 5vw, 3.4rem);
+  max-width: 22ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inspiration-hero p {
+  max-width: 50ch;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.05rem;
+}
+
+/* ============================================================
+   Shared "photo tile" look: a real product/style photo with a dark
+   gradient at the bottom so a light label stays readable over any
+   image. Built on top of .img-zoom (shared.css) for the hover effect.
+   ============================================================ */
+.photo-tile {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.photo-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0) 60%);
+}
+
+.photo-tile-label {
+  position: relative;
+  z-index: 2;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+/* ---- Shop by Season ---- */
+.season-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.season-card .photo-tile {
+  aspect-ratio: 3 / 4;
+}
+
+.season-card .photo-tile-label {
+  font-size: 1.5rem;
+}
+
+.season-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+}
+
+.season-meta span {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+.season-card p {
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .season-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---- Runway Edits ---- */
+.edit-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: center;
+  margin-bottom: var(--space-xl);
+}
+
+.edit-row:last-child {
+  margin-bottom: 0;
+}
+
+.edit-row.reverse .edit-image {
+  order: 2;
+}
+
+.edit-row.reverse .edit-copy {
+  order: 1;
+}
+
+.edit-image .photo-tile {
+  aspect-ratio: 5 / 4;
+}
+
+.edit-image .photo-tile-label {
+  font-size: 1.9rem;
+}
+
+.edit-copy .eyebrow {
+  margin-bottom: 0.6rem;
+}
+
+.edit-copy h3 {
+  font-size: 1.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.edit-copy p {
+  font-size: 0.98rem;
+  max-width: 46ch;
+}
+
+.edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.88rem;
+  color: var(--color-dark);
+  border-bottom: 1px solid var(--color-accent);
+  padding-bottom: 2px;
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 860px) {
+  .edit-row,
+  .edit-row.reverse {
+    grid-template-columns: 1fr;
+  }
+  .edit-row.reverse .edit-image,
+  .edit-row.reverse .edit-copy {
+    order: initial;
+  }
+}
+
+/* ---- Shop by Style ---- */
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+}
+
+.style-card .photo-tile {
+  aspect-ratio: 1 / 1;
+}
+
+.style-card .photo-tile-label {
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 860px) {
+  .style-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ---- CTA band ---- */
+.inspiration-cta {
+  text-align: center;
+  background-color: var(--color-dark);
+  color: #e9e6de;
+}
+
+.inspiration-cta h2 {
+  color: #ffffff;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  max-width: 24ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.inspiration-cta p {
+  color: #c7c3ba;
+  max-width: 46ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn-light {
+  background-color: #ffffff;
+  color: var(--color-dark);
+}
+
+.btn-light:hover {
+  background-color: #e9e6de;
+  color: var(--color-dark);
+}
+
+.cta-note {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: #9a978f;
+  margin-top: var(--space-sm);
+  margin-bottom: 0;
+}
+
+/* ============================================================
+   Click-through detail view (Season / Runway Edit / Style archetype).
+   Hidden by default; inspiration.js swaps #mainContent for this based
+   on a ?category= query param — see that file for the routing logic.
+   This mirrors the pattern the approved mockup used, kept here as a
+   lightweight stand-in for real per-category catalog pages.
+   ============================================================ */
+.detail-view {
+  padding: var(--space-xl) 0;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-lg);
+  transition: color var(--transition-fast);
+}
+
+.back-link:hover {
+  color: var(--color-dark);
+}
+
+.detail-head {
+  max-width: 60ch;
+  margin-bottom: var(--space-lg);
+}
+
+.detail-head h1 {
+  font-size: clamp(2rem, 4.5vw, 2.8rem);
+  margin-top: 0.3rem;
+}
+
+.detail-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.6rem;
+}
+
+.detail-hero {
+  aspect-ratio: 16 / 7;
+  margin-bottom: var(--space-lg);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.detail-grid .photo-tile {
+  aspect-ratio: 3 / 4;
+}
+
+.detail-grid .photo-tile-label {
+  font-size: 0.95rem;
+}
+
+.detail-note {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  text-align: center;
+  max-width: 60ch;
+  margin: 0 auto;
+}
+
+@media (max-width: 860px) {
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .detail-hero {
+    aspect-ratio: 4 / 3;
+  }
+}

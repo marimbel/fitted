@@ -17,6 +17,7 @@ export default defineConfig({
         contact: resolve(__dirname, "contact.html"),
         app: resolve(__dirname, "app.html"),
         architecture: resolve(__dirname, "architecture.html"),
+        inspiration: resolve(__dirname, "inspiration.html"),
         login: resolve(__dirname, "login.html"),
       },
     },
