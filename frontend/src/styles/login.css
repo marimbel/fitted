@@ -66,3 +66,41 @@
 /* On tablets/desktops with room for two 400px cards + gap, .auth-layout's
    flex-wrap already places them side by side. Below that width they wrap
    onto their own lines automatically — no extra media query needed. */
+
+/* ---- Google Sign-In card (the REAL auth, separate from the demo
+   form below it) and the divider between the two ---- */
+.google-auth-card {
+  max-width: 420px;
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.google-auth-card h2 {
+  font-size: 1.3rem;
+}
+
+.google-auth-card .google-auth-panel {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: var(--space-lg);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-border);
+}

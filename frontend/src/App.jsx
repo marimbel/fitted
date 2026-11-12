@@ -72,7 +72,7 @@ export default function App() {
       <RouteTracker />
       <Navbar activePage="app" />
 
-      <div className="container-fitted spa-shell">
+      <div className="spa-shell-wide">
         <SpaTabs />
 
         <Routes>

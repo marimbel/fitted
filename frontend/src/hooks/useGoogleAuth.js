@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../services/apiClient.js";
 import { trackEvent } from "../services/analytics.js";
 import { logEvent, logError } from "../services/logger.js";
+import { saveSession, loadSession, clearSession } from "../services/authSession.js";
 
 const PHOTOS_SCOPE = "https://www.googleapis.com/auth/photospicker.mediaitems.readonly";
 
@@ -32,6 +33,30 @@ export function useGoogleAuth() {
   const tokenClientRef = useRef(null);
 
   const clientId = import.meta.env.VITE_GOOGLE_OAUTH_CLIENT_ID;
+
+  // Restore a session saved on another page (e.g. the user signed in
+  // on the Login page, then navigated to the Fitting Room) before
+  // Google's own script has even finished loading. This only runs
+  // once, on first mount -- see authSession.js for what's trusted here
+  // versus what the backend independently re-verifies on every call.
+  useEffect(() => {
+    const saved = loadSession();
+    if (saved) {
+      setIdToken(saved.idToken);
+      setProfile(saved.profile);
+      if (saved.accessToken) setAccessToken(saved.accessToken);
+    }
+  }, []);
+
+  // Single source of truth for persisting the session: runs whenever
+  // idToken/profile/accessToken actually change, instead of calling
+  // saveSession() from inside two separate callbacks (which would each
+  // need to read the OTHER two values out of stale closures).
+  useEffect(() => {
+    if (idToken && profile) {
+      saveSession({ idToken, profile, accessToken });
+    }
+  }, [idToken, profile, accessToken]);
 
   useEffect(() => {
     if (!clientId || !window.google || !buttonRef.current) return;
@@ -78,6 +103,7 @@ export function useGoogleAuth() {
     setIdToken(null);
     setProfile(null);
     setAccessToken(null);
+    clearSession();
   }
 
   return {

@@ -5,9 +5,24 @@
    consistent with the rest of the site.
    ========================================================================= */
 
-.spa-shell {
+/* Deliberately NOT .container-fitted (max-width: 1220px) -- the Fitting
+   Room is the product itself, so it's allowed to use the full page
+   width instead of being boxed in like the marketing pages. Still has
+   side padding so nothing touches the viewport edge. */
+.spa-shell-wide {
+  width: 100%;
+  max-width: 100%;
+  padding-left: var(--space-lg);
+  padding-right: var(--space-lg);
   padding-top: var(--space-lg);
   padding-bottom: var(--space-xl);
+}
+
+@media (max-width: 767px) {
+  .spa-shell-wide {
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
 }
 
 .fitting-room-heading {
@@ -52,8 +67,12 @@
    the React page. */
 .fitting-room-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 380px) 1fr;
-  gap: var(--space-lg);
+  /* A wider, capped left column (was max 380px) now that the shell
+     itself uses the full page width -- the photo preview stays a
+     comfortable reading width instead of stretching edge to edge,
+     while the product grid on the right gets the rest of the room. */
+  grid-template-columns: minmax(320px, 460px) 1fr;
+  gap: var(--space-xl);
   align-items: start;
 }
 
