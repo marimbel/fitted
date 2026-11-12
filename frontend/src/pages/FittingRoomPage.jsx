@@ -8,7 +8,7 @@ import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
 import { CATEGORIES, PRODUCTS } from "../data/products.js";
-import { simulateTryOn } from "../services/tryOnService.js";
+import { simulateMultiAngleTryOn } from "../services/tryOnService.js";
 import { apiFetch } from "../services/apiClient.js";
 import { useGooglePhotosPicker } from "../hooks/useGooglePhotosPicker.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder.js";
@@ -46,7 +46,7 @@ export default function FittingRoomPage({
 
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
-  const [tryOnMessage, setTryOnMessage] = useState("");
+  const [tryOnAngles, setTryOnAngles] = useState([]);
 
   // --- Project 2: Photos import + voice style request. `auth` itself is
   // now a prop (lifted up to App.jsx) so My Looks can read back what's
@@ -70,8 +70,8 @@ export default function FittingRoomPage({
     // PROJECT 2: Replace this simulated operation with the Express API
     // endpoint for Google Virtual Try-On (see src/services/tryOnService.js) —
     // deferred per the proposal review until the core workflow below is solid.
-    const result = await simulateTryOn(photo, selectedProduct);
-    setTryOnMessage(result.message);
+    const result = await simulateMultiAngleTryOn(photo, selectedProduct);
+    setTryOnAngles(result.angles);
     setTryOnStatus("done");
   }
 
@@ -155,7 +155,7 @@ export default function FittingRoomPage({
 
           <SelectedProduct product={selectedProduct} hasPhoto={Boolean(photo)} onTryOn={handleTryOn} />
 
-          <TryOnPanel status={tryOnStatus} product={selectedProduct} resultMessage={tryOnMessage} />
+          <TryOnPanel status={tryOnStatus} product={selectedProduct} angles={tryOnAngles} />
         </div>
 
         {/* RIGHT SIDE: product discovery */}

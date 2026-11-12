@@ -176,12 +176,76 @@
   margin: var(--space-xs) 0 0 0;
 }
 
-/* ---- Try-on panel ---- */
+/* ---- Try-on panel: a photo-studio "stage" with a background-color
+   picker and a Front/Side/Back angle switcher (see TryOnPanel.jsx). ---- */
 .try-on-panel {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background-color: var(--color-bg-secondary);
+}
+
+.try-on-stage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.try-on-swatches {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.try-on-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  padding: 0;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.try-on-swatch:hover {
+  transform: scale(1.12);
+}
+
+.try-on-swatch.is-active {
+  box-shadow: 0 0 0 2px var(--color-card), 0 0 0 3.5px var(--color-accent);
+}
+
+.try-on-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 220px;
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-medium);
+}
+
+.try-on-figure {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
+
+/* On the darkest swatch (Charcoal), flip text/figure to light so they
+   stay legible against the backdrop they're sitting on. */
+.try-on-stage.is-dark {
+  color: #e9e6de;
+}
+
+.try-on-stage.is-dark .try-on-figure {
+  color: #c7c3ba;
+}
+
+.try-on-stage.is-dark .try-on-result-message {
+  color: #c7c3ba;
 }
 
 .try-on-loading {
@@ -215,6 +279,34 @@
   font-size: 0.85rem;
   margin-bottom: 0;
   font-style: italic;
+  max-width: 32ch;
+}
+
+.try-on-angle-tabs {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.try-on-angle-tab {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-text-secondary);
+  background-color: var(--color-card);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.try-on-angle-tab:hover {
+  border-color: var(--color-accent);
+}
+
+.try-on-angle-tab.is-active {
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+  font-weight: 600;
 }
 
 /* ---- Category filter pills ---- */
