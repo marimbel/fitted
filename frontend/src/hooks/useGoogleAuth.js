@@ -59,41 +59,52 @@ export function useGoogleAuth() {
   }, [idToken, profile, accessToken]);
 
   useEffect(() => {
-    if (!clientId || !window.google || !buttonRef.current) return;
+    if (!clientId || !buttonRef.current) return;
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (response) => {
-        setIdToken(response.credential);
-        // Ask the backend to verify the token and send back the
-        // trusted profile, rather than trusting whatever we decode
-        // client-side ourselves.
-        try {
-          const { user } = await apiFetch("/api/auth/me", { idToken: response.credential });
-          setProfile(user);
-          trackEvent({ category: "Auth", action: "Signed In", label: "Google Sign-In" });
-          logEvent("sign_in_succeeded", { uid: user?.uid });
-        } catch (err) {
-          setProfile(null);
-          logError("sign_in_failed", err);
-        }
-      },
-    });
-    window.google.accounts.id.renderButton(buttonRef.current, {
-      theme: "outline",
-      size: "large",
-      text: "signin_with",
-    });
+    function initializeGoogle() {
+      if (!window.google?.accounts?.id || !buttonRef.current) return;
 
-    // The access-token client is separate from sign-in: it's only
-    // requested (and only prompts the user) when something that
-    // actually needs Photos access is clicked.
-    tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: PHOTOS_SCOPE,
-      callback: (tokenResponse) => setAccessToken(tokenResponse.access_token),
-    });
-  }, [clientId]);
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          setIdToken(response.credential);
+          // Ask the backend to verify the token and send back the
+          // trusted profile, rather than trusting whatever we decode
+          // client-side ourselves.
+          try {
+            const { user } = await apiFetch("/api/auth/me", { idToken: response.credential });
+            setProfile(user);
+            trackEvent({ category: "Auth", action: "Signed In", label: "Google Sign-In" });
+            logEvent("sign_in_succeeded", { uid: user?.uid });
+          } catch (err) {
+            setProfile(null);
+            logError("sign_in_failed", err);
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(buttonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "signin_with",
+      });
+
+      // The access-token client is separate from sign-in: it's only
+      // requested (and only prompts the user) when something that
+      // actually needs Photos access is clicked.
+      tokenClientRef.current = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: PHOTOS_SCOPE,
+        callback: (tokenResponse) => setAccessToken(tokenResponse.access_token),
+      });
+    }
+
+    // The async GIS script can finish after React mounts. Subscribe first
+    // and also check now so either loading order works.
+    const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    script?.addEventListener("load", initializeGoogle);
+    initializeGoogle();
+    return () => script?.removeEventListener("load", initializeGoogle);
+  }, [clientId, Boolean(idToken && profile)]);
 
   function requestPhotosAccess() {
     tokenClientRef.current?.requestAccessToken();

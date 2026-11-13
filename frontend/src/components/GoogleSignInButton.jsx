@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import "../styles/google-auth.css";
 
 /**
  * GoogleSignInButton.jsx
@@ -28,6 +29,11 @@ import { useEffect, useState } from "react";
 export default function GoogleSignInButton({ auth }) {
   const { buttonRef, isSignedIn, profile, accessToken, requestPhotosAccess, signOut } = auth;
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef(null);
+  function closeModal() {
+    triggerRef.current?.focus();
+    setIsOpen(false);
+  }
 
   // Close the modal automatically once sign-in actually succeeds, so
   // the user doesn't have to dismiss it themselves after choosing an
@@ -40,20 +46,20 @@ export default function GoogleSignInButton({ auth }) {
     <div className="google-auth-panel">
       {!isSignedIn ? (
         <>
-          <button type="button" className="btn-fitted btn-dark w-100" onClick={() => setIsOpen(true)}>
+          <button ref={triggerRef} type="button" className="btn-fitted btn-dark w-100" onClick={() => setIsOpen(true)}>
             Sign in with Google
           </button>
 
           <div
             className={`google-auth-modal-backdrop${isOpen ? " is-open" : ""}`}
-            onClick={() => setIsOpen(false)}
+            onClick={closeModal}
             aria-hidden={!isOpen}
           >
             <div className="google-auth-modal" onClick={(event) => event.stopPropagation()}>
               <button
                 type="button"
                 className="google-auth-modal-close"
-                onClick={() => setIsOpen(false)}
+                onClick={closeModal}
                 aria-label="Close"
               >
                 ×
