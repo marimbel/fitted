@@ -66,6 +66,7 @@ export default function GoogleSignInButton({ auth }) {
               </button>
               <p className="google-auth-modal-title">Sign in to Fitted</p>
               <div ref={buttonRef}></div>
+              {auth.authError && <p role="alert">{auth.authError}</p>}
             </div>
           </div>
         </>

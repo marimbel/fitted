@@ -29,6 +29,7 @@ export function useGoogleAuth() {
   const [idToken, setIdToken] = useState(null);
   const [profile, setProfile] = useState(null); // { uid, email, name, picture }
   const [accessToken, setAccessToken] = useState(null);
+  const [authError, setAuthError] = useState(null);
   const buttonRef = useRef(null);
   const tokenClientRef = useRef(null);
 
@@ -67,6 +68,7 @@ export function useGoogleAuth() {
       window.google.accounts.id.initialize({
         client_id: clientId,
         callback: async (response) => {
+          setAuthError(null);
           setIdToken(response.credential);
           // Ask the backend to verify the token and send back the
           // trusted profile, rather than trusting whatever we decode
@@ -77,7 +79,9 @@ export function useGoogleAuth() {
             trackEvent({ category: "Auth", action: "Signed In", label: "Google Sign-In" });
             logEvent("sign_in_succeeded", { uid: user?.uid });
           } catch (err) {
+            setIdToken(null);
             setProfile(null);
+            setAuthError("Sign-in could not be verified. Please try again.");
             logError("sign_in_failed", err);
           }
         },
@@ -118,6 +122,7 @@ export function useGoogleAuth() {
   }
 
   return {
+    authError,
     buttonRef,
     idToken,
     profile,
