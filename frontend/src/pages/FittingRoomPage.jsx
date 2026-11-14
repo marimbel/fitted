@@ -6,6 +6,7 @@ import CategoryFilter from "../components/CategoryFilter.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import StyleSearchModal from "../components/StyleSearchModal.jsx";
 import ExploreStyle from "../components/ExploreStyle.jsx";
+import ClothingPreferences, { categoryMatches } from "../components/ClothingPreferences.jsx";
 import LookBuilderQuiz from "../components/LookBuilderQuiz.jsx";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
@@ -57,6 +58,7 @@ export default function FittingRoomPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [quizOpen, setQuizOpen] = useState(false);
   const [visualPreferences, setVisualPreferences] = useState(null);
+  const [clothingPreferences, setClothingPreferences] = useState({ market: "", season: "", categories: [] });
 
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
@@ -83,9 +85,9 @@ export default function FittingRoomPage({
   const [lookError, setLookError] = useState(null);
 
   const filteredProducts = useMemo(() => {
-    if (activeCategory === "All") return PRODUCTS;
-    return PRODUCTS.filter((product) => product.category === activeCategory);
-  }, [activeCategory]);
+    return PRODUCTS.filter((product) => (activeCategory === "All" || product.category === activeCategory)
+      && (!clothingPreferences.categories.length || clothingPreferences.categories.some((category) => categoryMatches(product, category))));
+  }, [activeCategory, clothingPreferences.categories]);
 
   // Picking a new product clears whatever try-on result is currently
   // on the Stage -- otherwise the previous item's generated image
@@ -174,7 +176,7 @@ export default function FittingRoomPage({
       const result = await apiFetch("/api/looks/generate", {
         idToken: auth.idToken,
         method: "POST",
-        body: JSON.stringify({ photoAnalyses, styleRequest, visualPreferences }),
+        body: JSON.stringify({ photoAnalyses, styleRequest, visualPreferences, clothingPreferences }),
       });
       setLookResult(result);
       setLookStatus("done");
@@ -218,6 +220,7 @@ export default function FittingRoomPage({
       </div>
 
       <ExploreStyle onBrowseCategory={(category) => { setSearchQuery(category); setSearchOpen(true); }} />
+      <ClothingPreferences value={clothingPreferences} onChange={(value) => { setClothingPreferences(value); setActiveCategory("All"); }} />
 
       <section className="look-builder-entry" aria-labelledby="look-builder-entry-title">
         <h2 id="look-builder-entry-title" className="h4">Find your style with LookBuilder</h2>
@@ -293,7 +296,7 @@ export default function FittingRoomPage({
           onSelectProduct={handleSelectProduct}
           onToggleFavorite={onToggleFavorite}
           emptyMessageTitle="No products in this category yet."
-          emptyMessageBody="Try selecting a different filter above."
+          emptyMessageBody="Try a different category or clear your optional category preferences above."
         />
       </div>
 

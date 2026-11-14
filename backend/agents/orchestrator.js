@@ -75,15 +75,16 @@ import { generateStructured } from "../services/geminiService.js";
 import { PRODUCTS } from "../data/products.js";
 import { db } from "../config/firestore.js";
 import { visualPreferencePrompt } from "../services/visualPreferences.js";
+import { clothingPreferencePrompt } from "../services/clothingPreferences.js";
 
 const MAX_ITERATIONS = 3;
 
 // ---- Agent 1: StyleAnalyst ----
-async function runStyleAnalyst(photoAnalyses, generate = generateStructured, uid = "server", visualPreferences = []) {
+async function runStyleAnalyst(photoAnalyses, generate = generateStructured, uid = "server", visualPreferences = [], clothingPreferences = {}) {
   const prompt =
     "You are StyleAnalyst. Summarize this person's personal style as a " +
     "'Style DNA' profile, based on these photo analyses:\n\n" +
-    JSON.stringify(photoAnalyses, null, 2) + visualPreferencePrompt(visualPreferences);
+    JSON.stringify(photoAnalyses, null, 2) + visualPreferencePrompt(visualPreferences) + clothingPreferencePrompt(clothingPreferences);
 
   return generate([{ text: prompt }], styleDnaSchema, { label: "StyleAnalyst", uid });
 }
@@ -104,7 +105,7 @@ async function runLookBuilder({ styleDna, styleRequest, previousCritique }, gene
     JSON.stringify(styleDna, null, 2) +
     "\n\nStyle request:\n" +
     JSON.stringify(styleRequest, null, 2) +
-    visualPreferencePrompt(styleRequest.visualPreferences) + revisionNote;
+    visualPreferencePrompt(styleRequest.visualPreferences) + clothingPreferencePrompt(styleRequest.clothingPreferences || {}) + revisionNote;
 
   const result = await generate([{ text: prompt }], lookSetSchema, { label: "LookBuilder", uid });
   return result.looks;
@@ -126,7 +127,7 @@ async function runLookCritic({ styleDna, styleRequest, looks, ruleChecks }, gene
     "\n\nStyle request:\n" + JSON.stringify(styleRequest, null, 2) +
     "\n\nLooks:\n" + JSON.stringify(looks, null, 2) +
     "\n\nruleCheck (per look, same order):\n" + JSON.stringify(ruleChecks, null, 2) +
-    visualPreferencePrompt(styleRequest.visualPreferences);
+    visualPreferencePrompt(styleRequest.visualPreferences) + clothingPreferencePrompt(styleRequest.clothingPreferences || {});
 
   return generate([{ text: prompt }], critiqueSchema, { label: "LookCritic", uid });
 }
@@ -181,13 +182,13 @@ export function applyRuleOverride(critique, ruleChecks) {
  * network calls and no credentials.
  */
 export async function runOrchestrator(
-  { uid, photoAnalyses = [], styleRequest, visualPreferences = [] },
+  { uid, photoAnalyses = [], styleRequest, visualPreferences = [], clothingPreferences = {} },
   { generate = generateStructured, firestore = db } = {}
 ) {
   // Step 1: StyleAnalyst (sequential, runs once).
   styleRequest = { ...(styleRequest || { budget: 0, avoid: [], mustHaves: [] }),
-    ...(visualPreferences.length ? { visualPreferences } : {}) };
-  const styleDna = await runStyleAnalyst(photoAnalyses, generate, uid, visualPreferences);
+    clothingPreferences, ...(visualPreferences.length ? { visualPreferences } : {}) };
+  const styleDna = await runStyleAnalyst(photoAnalyses, generate, uid, visualPreferences, clothingPreferences);
 
   // Step 2: loop(LookBuilder <-> LookCritic), bounded at MAX_ITERATIONS.
   const agentTrace = [];

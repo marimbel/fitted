@@ -10,3 +10,7 @@ For Marianna's StyleAnalyst/LookBuilder work and Nico's LookCritic work:
 - Run `node --test tests/orchestrator.test.js tests/lookRules.test.js tests/visualPreferences.test.js`. Tests use fake Gemini and Firestore dependencies. Live generation still requires configured Gemini and Firestore access.
 
 This handoff is prepared for group review; no message has been sent to teammates.
+
+## Optional clothing preferences
+
+The generation endpoint also accepts `clothingPreferences: { market, season, categories }`, validated by `services/clothingPreferences.js`. Empty values mean no preference. These are forwarded to all three agents and persisted under `styleRequest.clothingPreferences`. The frontend category checkboxes filter the local grid; market and season guide generation because catalog products have no verified market/season metadata. Preserve the prompt guidance: category focus must still yield complete outfits, unavailable items must not be invented, and explicit weather/avoid constraints take precedence over seasonal suggestions.

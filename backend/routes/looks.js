@@ -16,6 +16,7 @@ import { verifyGoogleToken } from "../middleware/verifyGoogleToken.js";
 import { runOrchestrator } from "../agents/orchestrator.js";
 import { db } from "../config/firestore.js";
 import { normalizeVisualPreferences } from "../services/visualPreferences.js";
+import { normalizeClothingPreferences } from "../services/clothingPreferences.js";
 
 const router = Router();
 
@@ -23,13 +24,16 @@ router.post("/generate", verifyGoogleToken, async (req, res) => {
   try {
     const { photoAnalyses = [], styleRequest = null } = req.body;
     let visualPreferences;
+    let clothingPreferences;
     try { visualPreferences = normalizeVisualPreferences(req.body.visualPreferences); }
+    catch (err) { return res.status(400).json({ error: err.message }); }
+    try { clothingPreferences = normalizeClothingPreferences(req.body.clothingPreferences); }
     catch (err) { return res.status(400).json({ error: err.message }); }
     if (!Array.isArray(photoAnalyses) || (!visualPreferences.length && (!photoAnalyses.length || !styleRequest))) {
       return res.status(400).json({ error: "Complete the visual quiz, or provide photoAnalyses and a styleRequest" });
     }
 
-    const result = await runOrchestrator({ uid: req.user.uid, photoAnalyses, styleRequest, visualPreferences });
+    const result = await runOrchestrator({ uid: req.user.uid, photoAnalyses, styleRequest, visualPreferences, clothingPreferences });
     res.json(result);
   } catch (err) {
     res.status(502).json({ error: err.message });
