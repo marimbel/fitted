@@ -6,6 +6,7 @@ import CategoryFilter from "../components/CategoryFilter.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import StyleSearchModal from "../components/StyleSearchModal.jsx";
 import ExploreStyle from "../components/ExploreStyle.jsx";
+import LookBuilderQuiz from "../components/LookBuilderQuiz.jsx";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
@@ -54,6 +55,8 @@ export default function FittingRoomPage({
   const tryOnRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [quizOpen, setQuizOpen] = useState(false);
+  const [visualPreferences, setVisualPreferences] = useState(null);
 
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
@@ -215,6 +218,14 @@ export default function FittingRoomPage({
       </div>
 
       <ExploreStyle onBrowseCategory={(category) => { setSearchQuery(category); setSearchOpen(true); }} />
+
+      <section className="look-builder-entry" aria-labelledby="look-builder-entry-title">
+        <h2 id="look-builder-entry-title" className="h4">Find your style with LookBuilder</h2>
+        <p>Prefer pictures to words? Compare five pairs of outfits and choose the looks you love.</p>
+        {visualPreferences && <p role="status">Your selections: {visualPreferences.map((choice) => choice.label).join(", ")}.</p>}
+        <button type="button" className="btn-fitted btn-outline" onClick={() => setQuizOpen(true)}>{visualPreferences ? "Retake LookBuilder quiz" : "Open LookBuilder"}</button>
+        {quizOpen && <LookBuilderQuiz onClose={() => setQuizOpen(false)} onComplete={(choices) => { setVisualPreferences(choices); setQuizOpen(false); }} />}
+      </section>
 
       <section className="voice-style-card" aria-labelledby="voice-style-heading">
         <span className="voice-style-eyebrow">Your personal style brief</span>

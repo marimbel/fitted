@@ -1,0 +1,29 @@
+.look-builder-quiz {
+  width: min(820px, calc(100% - 32px));
+  max-height: 90dvh;
+  margin: auto;
+  padding: clamp(18px, 3vw, 32px);
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  color: var(--color-text);
+}
+.look-builder-quiz::backdrop { background: rgba(36, 36, 36, 0.55); }
+.look-builder-quiz-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.look-builder-quiz progress { width: 100%; height: 6px; accent-color: var(--color-text); margin-bottom: 20px; }
+.look-builder-quiz h3 { font-size: 1.3rem; }
+.look-builder-quiz p { color: var(--color-text-secondary); }
+.look-builder-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.look-builder-choice { padding: 0 0 16px; overflow: hidden; border: 2px solid var(--color-border); border-radius: 8px; background: var(--color-bg); color: var(--color-text); text-align: left; }
+.look-builder-choice:hover, .look-builder-choice[aria-pressed="true"] { border-color: var(--color-accent); }
+.look-builder-choice img { width: 100%; height: clamp(180px, 35vh, 340px); object-fit: contain; background: var(--color-bg-secondary); }
+.look-builder-choice span, .look-builder-choice small { display: block; padding: 0 14px; margin-top: 12px; }
+.look-builder-choice span { font-weight: 600; }
+.look-builder-choice small { color: var(--color-text-secondary); }
+.look-builder-quiz-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; }
+.look-builder-quiz-actions > span { font-size: 0.8rem; color: var(--color-text-secondary); }
+.look-builder-summary { padding-left: 20px; line-height: 2; }
+.look-builder-entry { max-width: 680px; margin: 0 auto 32px; padding: 24px; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; }
+.look-builder-entry p { color: var(--color-text-secondary); }
+@media (max-width: 420px) { .look-builder-pair { gap: 8px; } .look-builder-choice span { font-size: 0.85rem; } }
