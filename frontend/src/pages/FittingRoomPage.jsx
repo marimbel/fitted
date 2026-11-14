@@ -5,6 +5,7 @@ import TryOnPanel from "../components/TryOnPanel.jsx";
 import CategoryFilter from "../components/CategoryFilter.jsx";
 import ProductGrid from "../components/ProductGrid.jsx";
 import StyleSearchModal from "../components/StyleSearchModal.jsx";
+import ExploreStyle from "../components/ExploreStyle.jsx";
 import GoogleSignInButton from "../components/GoogleSignInButton.jsx";
 import StyleRequestRecorder from "../components/StyleRequestRecorder.jsx";
 import LookResultsPanel from "../components/LookResultsPanel.jsx";
@@ -52,6 +53,7 @@ export default function FittingRoomPage({
   const [activeCategory, setActiveCategory] = useState("All");
   const tryOnRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
@@ -212,6 +214,8 @@ export default function FittingRoomPage({
         <p>Find something you love. See how it fits your style.</p>
       </div>
 
+      <ExploreStyle onBrowseCategory={(category) => { setSearchQuery(category); setSearchOpen(true); }} />
+
       <section className="voice-style-card" aria-labelledby="voice-style-heading">
         <span className="voice-style-eyebrow">Your personal style brief</span>
         <h2 id="voice-style-heading" className="h4">Tell us your style</h2>
@@ -253,8 +257,8 @@ export default function FittingRoomPage({
       </div>
 
       <div className="fitting-room-below-stage">
-        <button type="button" className="btn-fitted btn-outline" onClick={() => setSearchOpen(true)}>Add more styles</button>
-        {searchOpen && <StyleSearchModal onClose={() => setSearchOpen(false)} onSelectProduct={handleSelectProduct}
+        <button type="button" className="btn-fitted btn-outline" onClick={() => { setSearchQuery(""); setSearchOpen(true); }}>Add more styles</button>
+        {searchOpen && <StyleSearchModal initialQuery={searchQuery} onClose={() => setSearchOpen(false)} onSelectProduct={handleSelectProduct}
           selectedProductId={selectedProduct?.id} favoriteIds={favoriteIds} onToggleFavorite={onToggleFavorite} />}
         <SelectedProduct
           product={selectedProduct}

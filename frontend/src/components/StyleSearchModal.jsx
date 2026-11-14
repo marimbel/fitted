@@ -5,10 +5,10 @@ import { PRODUCTS } from "../data/products.js";
 import { searchCatalog } from "../services/catalogSearch.js";
 import "../styles/style-search.css";
 
-export default function StyleSearchModal({ onClose, onSelectProduct, selectedProductId, favoriteIds, onToggleFavorite }) {
+export default function StyleSearchModal({ onClose, onSelectProduct, selectedProductId, favoriteIds, onToggleFavorite, initialQuery = "" }) {
   const dialogRef = useRef(null);
   const recognitionRef = useRef(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [listening, setListening] = useState(false);
   const [error, setError] = useState("");
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
