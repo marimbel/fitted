@@ -74,15 +74,16 @@ import { styleDnaSchema, lookSetSchema, critiqueSchema } from "./schemas.js";
 import { generateStructured } from "../services/geminiService.js";
 import { PRODUCTS } from "../data/products.js";
 import { db } from "../config/firestore.js";
+import { visualPreferencePrompt } from "../services/visualPreferences.js";
 
 const MAX_ITERATIONS = 3;
 
 // ---- Agent 1: StyleAnalyst ----
-async function runStyleAnalyst(photoAnalyses, generate = generateStructured, uid = "server") {
+async function runStyleAnalyst(photoAnalyses, generate = generateStructured, uid = "server", visualPreferences = []) {
   const prompt =
     "You are StyleAnalyst. Summarize this person's personal style as a " +
     "'Style DNA' profile, based on these photo analyses:\n\n" +
-    JSON.stringify(photoAnalyses, null, 2);
+    JSON.stringify(photoAnalyses, null, 2) + visualPreferencePrompt(visualPreferences);
 
   return generate([{ text: prompt }], styleDnaSchema, { label: "StyleAnalyst", uid });
 }
@@ -103,7 +104,7 @@ async function runLookBuilder({ styleDna, styleRequest, previousCritique }, gene
     JSON.stringify(styleDna, null, 2) +
     "\n\nStyle request:\n" +
     JSON.stringify(styleRequest, null, 2) +
-    revisionNote;
+    visualPreferencePrompt(styleRequest.visualPreferences) + revisionNote;
 
   const result = await generate([{ text: prompt }], lookSetSchema, { label: "LookBuilder", uid });
   return result.looks;
@@ -124,7 +125,8 @@ async function runLookCritic({ styleDna, styleRequest, looks, ruleChecks }, gene
     "Style DNA:\n" + JSON.stringify(styleDna, null, 2) +
     "\n\nStyle request:\n" + JSON.stringify(styleRequest, null, 2) +
     "\n\nLooks:\n" + JSON.stringify(looks, null, 2) +
-    "\n\nruleCheck (per look, same order):\n" + JSON.stringify(ruleChecks, null, 2);
+    "\n\nruleCheck (per look, same order):\n" + JSON.stringify(ruleChecks, null, 2) +
+    visualPreferencePrompt(styleRequest.visualPreferences);
 
   return generate([{ text: prompt }], critiqueSchema, { label: "LookCritic", uid });
 }
@@ -179,11 +181,13 @@ export function applyRuleOverride(critique, ruleChecks) {
  * network calls and no credentials.
  */
 export async function runOrchestrator(
-  { uid, photoAnalyses, styleRequest },
+  { uid, photoAnalyses = [], styleRequest, visualPreferences = [] },
   { generate = generateStructured, firestore = db } = {}
 ) {
   // Step 1: StyleAnalyst (sequential, runs once).
-  const styleDna = await runStyleAnalyst(photoAnalyses, generate, uid);
+  styleRequest = { ...(styleRequest || { budget: 0, avoid: [], mustHaves: [] }),
+    ...(visualPreferences.length ? { visualPreferences } : {}) };
+  const styleDna = await runStyleAnalyst(photoAnalyses, generate, uid, visualPreferences);
 
   // Step 2: loop(LookBuilder <-> LookCritic), bounded at MAX_ITERATIONS.
   const agentTrace = [];

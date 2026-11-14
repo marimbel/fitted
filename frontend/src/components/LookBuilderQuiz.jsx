@@ -64,7 +64,7 @@ export default function LookBuilderQuiz({ onClose, onComplete }) {
       <progress value={step} max={pairs.length} aria-label="Quiz progress" />
       <h3 ref={headingRef} tabIndex={-1}>{complete ? "Your style selections" : "Which look feels more like you?"}</h3>
       {complete ? <>
-        <p>These are your choices from each pair, rather than a single style label. Finish to keep them in this fitting-room session.</p>
+        <p>Finish to use these choices as preferences for generated looks. You can also add photos and a voice request to refine the results.</p>
         <ul className="look-builder-summary">
           {answers.map((slug, index) => <li key={index}>{styles[slug].label}</li>)}
         </ul>

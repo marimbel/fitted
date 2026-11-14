@@ -161,7 +161,7 @@ export default function FittingRoomPage({
   }
 
   async function handleGenerateLooks() {
-    if (!photoAnalyses.length || !styleRequest) return;
+    if (!canGenerateLooks) return;
     // This click is the clearest "Called Gemini API" moment in the
     // whole app — it kicks off the full StyleAnalyst -> loop(LookBuilder
     // <-> LookCritic) pipeline — so it's the headline example event
@@ -174,7 +174,7 @@ export default function FittingRoomPage({
       const result = await apiFetch("/api/looks/generate", {
         idToken: auth.idToken,
         method: "POST",
-        body: JSON.stringify({ photoAnalyses, styleRequest }),
+        body: JSON.stringify({ photoAnalyses, styleRequest, visualPreferences }),
       });
       setLookResult(result);
       setLookStatus("done");
@@ -207,7 +207,7 @@ export default function FittingRoomPage({
     }
   }
 
-  const canGenerateLooks = auth.isSignedIn && photoAnalyses.length > 0 && Boolean(styleRequest)
+  const canGenerateLooks = auth.isSignedIn && (Boolean(visualPreferences?.length) || (photoAnalyses.length > 0 && Boolean(styleRequest)))
     && !["requesting", "recording", "parsing"].includes(recorder.status);
 
   return (
@@ -222,7 +222,11 @@ export default function FittingRoomPage({
       <section className="look-builder-entry" aria-labelledby="look-builder-entry-title">
         <h2 id="look-builder-entry-title" className="h4">Find your style with LookBuilder</h2>
         <p>Prefer pictures to words? Compare five pairs of outfits and choose the looks you love.</p>
-        {visualPreferences && <p role="status">Your selections: {visualPreferences.map((choice) => choice.label).join(", ")}.</p>}
+        {visualPreferences && <><p role="status">Your selections: {visualPreferences.map((choice) => choice.label).join(", ")}. These will guide your generated looks.</p>
+          <button type="button" className="btn-fitted btn-dark" disabled={!canGenerateLooks || lookStatus === "loading"} onClick={handleGenerateLooks}>{lookStatus === "loading" ? "Generating…" : "Generate looks from my choices"}</button>
+          {!auth.isSignedIn && <p>Sign in below to generate looks from your choices.</p>}
+          <p><a href="#generated-looks">View generated looks and status ↓</a></p>
+        </>}
         <button type="button" className="btn-fitted btn-outline" onClick={() => setQuizOpen(true)}>{visualPreferences ? "Retake LookBuilder quiz" : "Open LookBuilder"}</button>
         {quizOpen && <LookBuilderQuiz onClose={() => setQuizOpen(false)} onComplete={(choices) => { setVisualPreferences(choices); setQuizOpen(false); }} />}
       </section>
@@ -318,13 +322,12 @@ export default function FittingRoomPage({
 
             {auth.isSignedIn && !canGenerateLooks && (
               <p className="style-request-status">
-                Import at least one photo from the <NavLink to="/photos">Google Photos</NavLink> tab and
-                record a style request to generate looks.
+                Complete the LookBuilder quiz, or import a photo from <NavLink to="/photos">Google Photos</NavLink> and record a style request. Wait for any recording to finish before generating.
               </p>
             )}
           </div>
 
-          <div className="ai-recommendations-results">
+          <div id="generated-looks" className="ai-recommendations-results">
             <LookResultsPanel status={lookStatus} result={lookResult} error={lookError} onSaveLook={handleSaveLook} />
           </div>
         </div>
