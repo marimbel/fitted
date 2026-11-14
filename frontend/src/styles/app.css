@@ -649,6 +649,53 @@
   border-radius: var(--radius-md);
 }
 
+.voice-style-card {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto var(--space-lg);
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  box-shadow: 0 4px 18px rgba(36, 36, 36, 0.04);
+}
+
+.voice-style-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.voice-style-card h2 { margin-bottom: 12px; }
+.voice-style-card > p { font-size: 0.9rem; line-height: 1.65; }
+.voice-style-example {
+  padding: 12px 16px;
+  border-left: 2px solid var(--color-accent);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+.voice-style-card .style-request-recorder { padding: 0; border: 0; }
+.voice-style-card .google-auth-panel { align-items: flex-start; }
+.voice-style-card .style-request-recorder > button,
+.voice-style-card .google-auth-panel > button {
+  width: auto !important;
+  max-width: 100%;
+}
+
+#voice-style-heading { scroll-margin-top: 140px; }
+
+@media (max-width: 480px) {
+  .voice-style-card .style-request-recorder > button,
+  .voice-style-card .google-auth-panel > button { width: 100% !important; }
+  .voice-style-card .google-auth-panel { align-items: stretch; }
+}
+
 .style-request-status {
   font-size: 0.82rem;
   color: var(--color-text-secondary);

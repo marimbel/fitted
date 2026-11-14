@@ -202,7 +202,8 @@ export default function FittingRoomPage({
     }
   }
 
-  const canGenerateLooks = auth.isSignedIn && photoAnalyses.length > 0 && Boolean(styleRequest);
+  const canGenerateLooks = auth.isSignedIn && photoAnalyses.length > 0 && Boolean(styleRequest)
+    && !["requesting", "recording", "parsing"].includes(recorder.status);
 
   return (
     <div>
@@ -210,6 +211,21 @@ export default function FittingRoomPage({
         <h1>Virtual Fitting Room</h1>
         <p>Find something you love. See how it fits your style.</p>
       </div>
+
+      <section className="voice-style-card" aria-labelledby="voice-style-heading">
+        <span className="voice-style-eyebrow">Your personal style brief</span>
+        <h2 id="voice-style-heading" className="h4">Tell us your style</h2>
+        <p>Record what you are looking for, then review your request before generating looks.</p>
+        <p className="voice-style-example">“A casual summer outfit under $150, with linen pants and no wool.”</p>
+        {auth.isSignedIn ? (
+          <StyleRequestRecorder recorder={recorder} idToken={auth.idToken} onParsed={setStyleRequest} />
+        ) : (
+          <>
+            <p>Sign in with Google to record your style request.</p>
+            <GoogleSignInButton auth={auth} />
+          </>
+        )}
+      </section>
 
       {/* The Stage: full width, at the top -- the uploaded photo and the
           real Virtual Try-On result both display here (TryOnPanel.jsx),
@@ -272,11 +288,7 @@ export default function FittingRoomPage({
 
         <div className="ai-recommendations-grid">
           <div className="ai-recommendations-controls">
-            <GoogleSignInButton auth={auth} />
-
-            {auth.isSignedIn && (
-              <StyleRequestRecorder recorder={recorder} idToken={auth.idToken} onParsed={setStyleRequest} />
-            )}
+            <p><a href="#voice-style-heading">Record or review your voice style request above</a>, then generate your looks here.</p>
 
             {auth.isSignedIn && (
               <button

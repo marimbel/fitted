@@ -37,12 +37,13 @@ export default function StyleRequestRecorder({ recorder, idToken, onParsed }) {
 
   return (
     <div className="style-request-recorder">
-      <button type="button" className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`} onClick={handleClick}>
-        {isRecording ? "Stop recording" : "Record your style request"}
+      <button type="button" disabled={status === "parsing" || status === "requesting"} className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`} onClick={handleClick}>
+        {isRecording ? "Stop and understand my request" : status === "parsing" ? "Understanding your request…" : status === "requesting" ? "Waiting for microphone…" : "Record your style request"}
       </button>
+      {isRecording && <p role="status">Recording now. Describe your occasion, budget, and clothing preferences, then press Stop.</p>}
 
       {status === "parsing" && <p className="style-request-status">Listening to what you said…</p>}
-      {status === "error" && <p className="style-request-status style-request-error">{error}</p>}
+      {status === "error" && <p role="alert" className="style-request-status style-request-error">{error}</p>}
 
       {status === "done" && styleRequest && (
         <div className="style-request-summary">
