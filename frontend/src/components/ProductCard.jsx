@@ -21,7 +21,15 @@ export default function ProductCard({ product, isSelected, isFavorite, onSelect,
   return (
     <div className={`product-card${isSelected ? " is-selected" : ""}`}>
       <div className="product-card-image">
-        <img src={product.image} alt={product.name} />
+        <img
+          src={product.image}
+          alt={product.name}
+          draggable
+          onDragStart={(event) => {
+            event.dataTransfer.setData("application/x-fitted-product", String(product.id));
+            event.dataTransfer.effectAllowed = "copy";
+          }}
+        />
         <div className="product-card-favorite">
           <FavoritesButton isFavorite={isFavorite} onToggle={onToggleFavorite} />
         </div>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import PhotoUploader from "../components/PhotoUploader.jsx";
 import SelectedProduct from "../components/SelectedProduct.jsx";
 import TryOnPanel from "../components/TryOnPanel.jsx";
@@ -49,6 +49,7 @@ export default function FittingRoomPage({
   photoAnalyses,
 }) {
   const [activeCategory, setActiveCategory] = useState("All");
+  const tryOnRef = useRef(null);
 
   // useState for the try-on request's lifecycle: "idle" | "loading" | "done".
   const [tryOnStatus, setTryOnStatus] = useState("idle");
@@ -88,6 +89,22 @@ export default function FittingRoomPage({
     setTryOnResult(null);
     setActiveStageView("front");
     setImaginedAngles({});
+    const stage = tryOnRef.current;
+    if (stage) {
+      const navHeight = document.querySelector(".fitted-navbar")?.getBoundingClientRect().height ?? 0;
+      window.scrollTo({
+        top: Math.max(0, window.scrollY + stage.getBoundingClientRect().top - navHeight - 16),
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      });
+    }
+  }
+
+  function handleClothingDrop(event) {
+    const productId = event.dataTransfer.getData("application/x-fitted-product");
+    if (!productId) return;
+    event.preventDefault();
+    const product = PRODUCTS.find((item) => String(item.id) === productId);
+    if (product) handleSelectProduct(product);
   }
 
   async function handleTryOn() {
@@ -195,6 +212,16 @@ export default function FittingRoomPage({
       {/* The Stage: full width, at the top -- the uploaded photo and the
           real Virtual Try-On result both display here (TryOnPanel.jsx),
           on a backdrop whose color is a swatch picker away. */}
+      <div
+        ref={tryOnRef}
+        onDragOver={(event) => {
+          if (event.dataTransfer.types.includes("application/x-fitted-product")) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "copy";
+          }
+        }}
+        onDrop={handleClothingDrop}
+      >
       <TryOnPanel
         photo={photo}
         status={tryOnStatus}
@@ -205,6 +232,7 @@ export default function FittingRoomPage({
         onViewChange={handleStageViewChange}
         uploadControl={<PhotoUploader photo={photo} onPhotoSelected={onPhotoSelected} />}
       />
+      </div>
 
       <div className="fitting-room-below-stage">
         <SelectedProduct
