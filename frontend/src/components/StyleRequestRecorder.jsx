@@ -11,39 +11,78 @@
  *   idToken  - needed to call the backend once recording stops
  *   onParsed - (styleRequest) => void, called once Gemini returns a result
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+// Reassuring reminders repeat while the single Gemini request is running.
+const PROCESSING_MESSAGES = [
+  "Your request is being processed…",
+  "Thanks for your patience…",
+  "This can take a little while…",
+  "Please keep this page open…",
+];
 
 export default function StyleRequestRecorder({ recorder, idToken, onParsed }) {
-  const { isRecording, status, styleRequest, error, startRecording, stopRecording } = recorder;
+  const { isRecording, seconds, status, styleRequest, error, startRecording, stopRecording } = recorder;
   const lastReportedRef = useRef(null);
+  const [processingMessageIndex, setProcessingMessageIndex] = useState(0);
+  const busy = status === "preparing" || status === "parsing";
 
-  // Report a newly-parsed style request up to the parent exactly once,
-  // instead of every render — this is the same "lift state up, notify
-  // via a callback prop" pattern as FavoritesButton's onToggle.
   useEffect(() => {
+    // Send completed preferences to the parent page once per new result.
     if (styleRequest && styleRequest !== lastReportedRef.current) {
       lastReportedRef.current = styleRequest;
-      onParsed(styleRequest);
+      onParsed?.(styleRequest);
     }
   }, [styleRequest, onParsed]);
 
-  async function handleClick() {
-    if (isRecording) {
-      await stopRecording(idToken);
-    } else {
-      await startRecording();
+  useEffect(() => {
+    // Cycle the waiting reminder only while a request is in progress.
+    if (!busy) {
+      setProcessingMessageIndex(0);
+      return undefined;
     }
+
+    const timer = window.setInterval(() => {
+      setProcessingMessageIndex((current) => (current + 1) % PROCESSING_MESSAGES.length);
+    }, 4000);
+    return () => window.clearInterval(timer);
+  }, [busy]);
+
+  function handleClick() {
+    if (isRecording) stopRecording();
+    else startRecording(idToken);
   }
 
+  // Show the matching control, progress, error, or parsed preferences.
   return (
     <div className="style-request-recorder">
-      <button type="button" className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`} onClick={handleClick}>
-        {isRecording ? "Stop recording" : "Record your style request"}
+      <button
+        type="button"
+        className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`}
+        onClick={handleClick}
+        disabled={busy}
+      >
+        {isRecording ? "Stop recording" : busy ? "Processing recording…" : "Record your style request"}
       </button>
-
-      {status === "parsing" && <p className="style-request-status">Listening to what you said…</p>}
-      {status === "error" && <p className="style-request-status style-request-error">{error}</p>}
-
+      {isRecording && (
+        <p className="style-request-status" role="status">
+          Recording: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")} / 1:00
+        </p>
+      )}
+      {busy && (
+        <div className="style-request-progress">
+          <p className="style-request-status" aria-hidden="true">
+            {PROCESSING_MESSAGES[processingMessageIndex]}
+          </p>
+          <p className="style-request-status style-request-stage" role="status" aria-live="polite">
+            {/* The stage is real status; the rotating reminders are not separate processing steps. */}
+            Current stage: {status === "preparing"
+              ? "Preparing your audio recording."
+              : "Waiting for Gemini to transcribe it and extract your preferences."}
+          </p>
+        </div>
+      )}
+      {status === "error" && <p className="style-request-status style-request-error" role="alert">{error}</p>}
       {status === "done" && styleRequest && (
         <div className="style-request-summary">
           <p className="style-request-transcript">"{styleRequest.rawTranscript}"</p>
