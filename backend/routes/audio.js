@@ -16,9 +16,16 @@ import { parseVoiceRequest } from "../services/geminiService.js";
 
 const router = Router();
 
-router.post("/parse", verifyGoogleToken, async (req, res) => {
+// Allow unsigned requests only when local testing is explicitly enabled.
+const allowLocalVoiceTesting = process.env.AUDIO_DEV_AUTH_BYPASS === "true" && process.env.NODE_ENV !== "production";
+
+router.post("/parse", allowLocalVoiceTesting ? (req, _res, next) => {
+  req.user = { uid: "local-dev" };
+  next();
+} : verifyGoogleToken, async (req, res) => {
   try {
     const { audioBase64, mimeType } = req.body;
+    // Make sure the request contains audio before asking Gemini to parse it.
     if (!audioBase64) return res.status(400).json({ error: "audioBase64 is required" });
 
     const styleRequest = await parseVoiceRequest(req.user.uid, audioBase64, mimeType);
