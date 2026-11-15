@@ -1,18 +1,18 @@
 /**
  * StyleRequestRecorder.jsx
  *
- * A record/stop button plus the resulting structured style request,
- * once Gemini has parsed the recording. Keeps the recording lifecycle
- * (idle/recording/parsing/done) visible to the user the same way
- * TryOnPanel shows the simulated try-on's loading state.
+ * Record a spoken style request, listen back, then send it to Gemini. The
+ * user can delete it or record again before anything is sent; the parsed
+ * style request shows below once Gemini responds.
  *
  * Props:
  *   recorder - the object returned by useVoiceRecorder()
- *   idToken  - needed to call the backend once recording stops
- *   onParsed - (styleRequest) => void, called once Gemini returns a result
+ *   idToken  - needed to call the backend when the recording is submitted
+ *   onParsed - (styleRequest | null) => void; null when the result is discarded
  */
 import { useEffect, useRef, useState } from "react";
 
+const MAX_SECONDS = 60;
 // Reassuring reminders repeat while the single Gemini request is running.
 const PROCESSING_MESSAGES = [
   "Your request is being processed…",
@@ -21,15 +21,19 @@ const PROCESSING_MESSAGES = [
   "Please keep this page open…",
 ];
 
+const clock = (total) => `${Math.floor(total / 60)}:${String(total % 60).padStart(2, "0")}`;
+
 export default function StyleRequestRecorder({ recorder, idToken, onParsed }) {
-  const { isRecording, seconds, status, styleRequest, error, startRecording, stopRecording } = recorder;
-  const lastReportedRef = useRef(null);
-  const [processingMessageIndex, setProcessingMessageIndex] = useState(0);
+  const { status, seconds, styleRequest, error, audioUrl, startRecording, stopRecording, submitRecording, deleteRecording } = recorder;
+  const isRecording = status === "recording";
+  const requesting = status === "requesting";
   const busy = status === "preparing" || status === "parsing";
+  const lastReportedRef = useRef(null);
+  const [messageIndex, setMessageIndex] = useState(0);
 
   useEffect(() => {
-    // Send completed preferences to the parent page once per new result.
-    if (styleRequest && styleRequest !== lastReportedRef.current) {
+    // Tell the parent page whenever the parsed result appears or is discarded.
+    if (styleRequest !== lastReportedRef.current) {
       lastReportedRef.current = styleRequest;
       onParsed?.(styleRequest);
     }
@@ -38,51 +42,69 @@ export default function StyleRequestRecorder({ recorder, idToken, onParsed }) {
   useEffect(() => {
     // Cycle the waiting reminder only while a request is in progress.
     if (!busy) {
-      setProcessingMessageIndex(0);
+      setMessageIndex(0);
       return undefined;
     }
-
-    const timer = window.setInterval(() => {
-      setProcessingMessageIndex((current) => (current + 1) % PROCESSING_MESSAGES.length);
-    }, 4000);
+    const timer = window.setInterval(() => setMessageIndex((index) => (index + 1) % PROCESSING_MESSAGES.length), 4000);
     return () => window.clearInterval(timer);
   }, [busy]);
 
-  function handleClick() {
-    if (isRecording) stopRecording();
-    else startRecording(idToken);
-  }
-
-  // Show the matching control, progress, error, or parsed preferences.
   return (
     <div className="style-request-recorder">
-      <button
-        type="button"
-        className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`}
-        onClick={handleClick}
-        disabled={busy}
-      >
-        {isRecording ? "Stop recording" : busy ? "Processing recording…" : "Record your style request"}
-      </button>
-      {isRecording && (
+      {(!audioUrl || isRecording || requesting) && (
+        <button
+          type="button"
+          className={`btn-fitted ${isRecording ? "btn-outline" : "btn-dark"} w-100`}
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={requesting || busy}
+        >
+          {isRecording ? "Stop recording" : requesting ? "Waiting for microphone permission…" : "Record your style request"}
+        </button>
+      )}
+
+      {requesting && (
         <p className="style-request-status" role="status">
-          Recording: {Math.floor(seconds / 60)}:{String(seconds % 60).padStart(2, "0")} / 1:00
+          Your browser is asking for microphone access. Choose “Allow” to start recording.
         </p>
       )}
+
+      {isRecording && (
+        <p className="style-request-status" role="status">
+          Recording: {clock(seconds)} / {clock(MAX_SECONDS)}
+        </p>
+      )}
+
+      {audioUrl && !isRecording && (
+        <div className="style-request-review">
+          <p className="style-request-status">Your recording ({clock(seconds)}) — listen back before sending it:</p>
+          <audio className="style-request-audio" controls src={audioUrl} preload="metadata" />
+          <div className="style-request-actions">
+            {status !== "done" && (
+              <button type="button" className="btn-fitted btn-dark" onClick={() => submitRecording(idToken)} disabled={busy}>
+                {status === "error" ? "Try submitting again" : "Submit to Gemini"}
+              </button>
+            )}
+            <button type="button" className="btn-fitted btn-outline" onClick={startRecording} disabled={busy}>
+              Re-record
+            </button>
+            <button type="button" className="btn-fitted btn-outline" onClick={deleteRecording} disabled={busy}>
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       {busy && (
         <div className="style-request-progress">
-          <p className="style-request-status" aria-hidden="true">
-            {PROCESSING_MESSAGES[processingMessageIndex]}
-          </p>
+          <p className="style-request-status" aria-hidden="true">{PROCESSING_MESSAGES[messageIndex]}</p>
           <p className="style-request-status style-request-stage" role="status" aria-live="polite">
-            {/* The stage is real status; the rotating reminders are not separate processing steps. */}
-            Current stage: {status === "preparing"
-              ? "Preparing your audio recording."
-              : "Waiting for Gemini to transcribe it and extract your preferences."}
+            Current stage: {status === "preparing" ? "Preparing your audio recording." : "Waiting for Gemini to transcribe it and extract your preferences."}
           </p>
         </div>
       )}
-      {status === "error" && <p className="style-request-status style-request-error" role="alert">{error}</p>}
+
+      {status === "error" && error && <p className="style-request-status style-request-error" role="alert">{error}</p>}
+
       {status === "done" && styleRequest && (
         <div className="style-request-summary">
           <p className="style-request-transcript">"{styleRequest.rawTranscript}"</p>
