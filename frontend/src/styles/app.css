@@ -821,6 +821,22 @@
   color: #b0523f;
 }
 
+.style-request-review {
+  margin-top: var(--space-xs);
+}
+
+.style-request-audio {
+  width: 100%;
+  margin-top: var(--space-xs);
+}
+
+.style-request-actions {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  margin-top: var(--space-xs);
+}
+
 .style-request-summary {
   margin-top: var(--space-sm);
   font-size: 0.85rem;
