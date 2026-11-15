@@ -148,9 +148,10 @@ section {
 /* =========================================================================
    NAVBAR
    ========================================================================= */
+/* Use Inspiration's dark editorial navbar as the shared top bar across the site. */
 .fitted-navbar {
-  background-color: var(--color-bg) !important;
-  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-dark) !important;
+  border-bottom: 1px solid #45433f;
   padding-top: var(--space-sm);
   padding-bottom: var(--space-sm);
 }
@@ -158,14 +159,14 @@ section {
 .fitted-navbar .navbar-brand {
   font-family: var(--font-serif);
   font-size: 1.6rem;
-  color: var(--color-dark);
+  color: #ffffff;
   letter-spacing: 0.02em;
 }
 
 .fitted-navbar .nav-link {
   font-family: var(--font-sans);
   font-size: 0.92rem;
-  color: var(--color-text);
+  color: #ffffff;
   margin-left: var(--space-md);
   padding-bottom: 4px;
   border-bottom: 1px solid transparent;
@@ -174,12 +175,16 @@ section {
 
 .fitted-navbar .nav-link:hover,
 .fitted-navbar .nav-link.active {
-  color: var(--color-dark);
-  border-bottom-color: var(--color-accent);
+  color: #e8c3c8;
+  border-bottom-color: #e8c3c8;
 }
 
 .fitted-navbar .navbar-toggler {
-  border-color: var(--color-border);
+  border-color: #58564f;
+}
+
+.fitted-navbar .navbar-toggler-icon {
+  filter: invert(1);
 }
 
 /* =========================================================================
