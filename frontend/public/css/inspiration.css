@@ -1,42 +1,4 @@
-/* Inspiration (Look Book) page — page-specific styling layered on top of
-   shared.css, following the same pattern as architecture.css: reuse the
-   site's existing tokens/utilities (.card-fitted, .eyebrow, .divider,
-   .img-zoom, .reveal) rather than inventing a parallel design system.
-
-   One deliberate exception: this page's navbar is dark with a rose-pink
-   hover state, instead of the site's usual light navbar. That look was
-   iterated on and approved specifically for this "editorial look book"
-   page, so it's scoped here with the .inspiration-page body class rather
-   than changed sitewide in shared.css. */
-
-body.inspiration-page .fitted-navbar {
-  background-color: var(--color-dark) !important;
-  border-bottom-color: #45433f;
-}
-
-body.inspiration-page .fitted-navbar .navbar-brand {
-  color: #ffffff;
-}
-
-body.inspiration-page .fitted-navbar .nav-link {
-  color: #ffffff;
-}
-
-body.inspiration-page .fitted-navbar .nav-link:hover,
-body.inspiration-page .fitted-navbar .nav-link.active {
-  color: #e8c3c8;
-  border-bottom-color: #e8c3c8;
-}
-
-/* Bootstrap's default hamburger icon is a dark SVG; invert it so it
-   reads on the dark navbar background at mobile widths. */
-body.inspiration-page .fitted-navbar .navbar-toggler-icon {
-  filter: invert(1);
-}
-
-body.inspiration-page .fitted-navbar .navbar-toggler {
-  border-color: #58564f;
-}
+/* Styles for the Look Book content; shared.css styles the navbar. */
 
 /* ---- hero ---- */
 .inspiration-hero {
