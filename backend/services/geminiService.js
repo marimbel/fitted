@@ -32,14 +32,17 @@ export async function generateStructured(parts, schema, meta = {}) {
   // app goes through. `meta.uid` ties the GA4 event to a real user when
   // we have one; calls not tied to a specific user (none currently, but
   // kept generic for future use) fall back to "server".
-  const { label = "GeminiCall", uid = "server" } = meta;
+  const { label = "GeminiCall", uid = "server", thinkingLevel } = meta;
   const startedAt = Date.now();
 
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL,
+    model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
     generationConfig: {
       responseMimeType: "application/json",
       responseSchema: schema,
+      // Lower reasoning and a short output help voice requests return sooner.
+      ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
+      ...(label === "VoiceParsing" ? { maxOutputTokens: 512 } : {}),
     },
   });
 
@@ -119,8 +122,11 @@ export async function parseVoiceRequest(uid, audioBase64, mimeType = "audio/webm
   const styleRequest = await generateStructured(
     [{ inlineData: { data: audioBase64, mimeType } }, { text: prompt }],
     styleRequestSchema,
-    { label: "VoiceParsing", uid }
+    { label: "VoiceParsing", uid, thinkingLevel: "low" }
   );
+
+  // Local tests have no signed-in account, so return the result without saving it to Firestore.
+  if (uid === "local-dev") return styleRequest;
 
   const docRef = await db.collection(`users/${uid}/styleRequests`).add({
     ...styleRequest,
