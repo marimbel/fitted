@@ -67,6 +67,14 @@ app.use("/api/style-search", styleSearchRoutes);
 app.use("/api/shop", shopRoutes);
 app.use("/api/try-on", tryOnRoutes);
 
+// An over-limit upload (e.g. a huge recording) would otherwise get Express's
+// HTML error page, which the frontend can't show as a message.
+app.use((err, req, res, next) =>
+  err?.type === "entity.too.large"
+    ? res.status(413).json({ error: "That upload is too large. Try a smaller file or a shorter recording." })
+    : next(err)
+);
+
 // Serve the built frontend (frontend/dist) as static files, AFTER the
 // /api routes above so those always win. This only matters for the
 // single-container Cloud Run deployment (see the root Dockerfile) --
